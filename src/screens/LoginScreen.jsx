@@ -104,6 +104,7 @@ const LoginScreen = ({ navigation }) => {
         const tokenPart = url.split('token=');
         if (tokenPart.length > 1) {
           const token = tokenPart[1];
+          console.log(token)
           await AsyncStorage.setItem('userToken', token);
           setSuccessModalVisible(true);
           setSuccessModalVisible(false);

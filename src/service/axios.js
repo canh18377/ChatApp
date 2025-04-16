@@ -49,6 +49,7 @@ instance.interceptors.response.use(
 // Hàm giả lập lấy token từ AsyncStorage hoặc SecureStorage
 const getToken = async () => {
   const token = await AsyncStorage.getItem("userToken")
+  console.log(token)
   return token; // Thay thế bằng logic lấy token thực tế
 };
 

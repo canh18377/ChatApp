@@ -13,13 +13,10 @@ import {
 import { Avatar, IconButton } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
 import EmojiSelector from 'react-native-emoji-selector';
-import { connectSocket } from '../service/socket';
 import { fetchMessages } from '../redux/api/messageApi';
 import { getCurrentMe } from '../redux/api/userApi';
 import { useSelector, useDispatch } from 'react-redux';
-
-let socket = null;
-
+import { getSocket } from '../service/socket';
 const ChatDetailScreen = ({ navigation, route }) => {
   const { user, conversationId, isGroup } = route.params || {};
   const dispatch = useDispatch();
@@ -30,10 +27,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
-    socket = connectSocket();
-    if (me) {
-      socket.emit("register", me.idUser)
-    }
+    const socket = getSocket()
     dispatch(fetchMessages(conversationId));
     dispatch(getCurrentMe())
     socket.on('receive_message', (newMessage) => {
@@ -76,7 +70,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
   const renderMessage = ({ item }) => {
     return (
-      <View style={[styles.messageContainer, item.sender === me.idUser ? styles.sent : styles.received]}>
+      <View style={[styles.messageContainer, item.sender === me?.idUser ? styles.sent : styles.received]}>
         {item.content && <Text style={styles.messageText}>{item.content}</Text>}
         {item.image && <Image source={{ uri: item.image }} style={styles.imageMessage} />}
       </View>
@@ -111,7 +105,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
         {/* Chat Messages */}
         <FlatList
           data={localMessage}
-          keyExtractor={(item) => item._id.toString()}
+          keyExtractor={(item) => item?._id?.toString() || Math.random()}
           renderItem={renderMessage}
           contentContainerStyle={styles.messagesList}
           inverted

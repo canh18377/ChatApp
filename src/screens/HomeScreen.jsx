@@ -6,23 +6,31 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchConversations } from '../redux/api/conversationApi';
 import { ChatSkeletonItem } from '../screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { getCurrentMe } from '../redux/api/userApi';
+import { connectSocket } from '../service/socket';
+let socket = null
 const ChatListScreen = ({ navigation }) => {
   const [messages, setMessages] = useState([]);
-  const [skeletonCount, setSkeletonCount] = useState(6);
   const dispatch = useDispatch()
   const conversations = useSelector(state => state.conversationReducer.conversations)
   const loading = useSelector(state => state.conversationReducer.loading)
+  const isLoading = useSelector(state => state.userReducer.loading)
+  const me = useSelector((state) => state.userReducer.me);
   const token = useSelector(state => state.authReducer.token)
-  console.log(conversations)
   if (token) {
     AsyncStorage.setItem("userToken", token)
   }
-  console.log(conversations)
   useEffect(() => {
+    dispatch(getCurrentMe())
     dispatch(fetchConversations())
   }, []);
 
+  useEffect(() => {
+    socket = connectSocket();
+    if (me) {
+      socket.emit("register", me.idUser)
+    }
+  }, [me])
   return (
     <View style={styles.container}>
       {/* Search Box */}
@@ -40,7 +48,7 @@ const ChatListScreen = ({ navigation }) => {
         <Text style={styles.countText}>({messages.length})</Text>
       </View>
 
-      {loading ? (
+      {loading || isLoading ? (
         <View>
           {Array.from({ length: conversations.length }).map((_, index) => (
             <ChatSkeletonItem key={index} />
