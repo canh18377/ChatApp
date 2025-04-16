@@ -4,7 +4,7 @@ const baseURL = process.env.REACT_NATIVE_APP_API_BASE_URL
 console.log('Base URL::', baseURL);
 const instance = axios.create({
   baseURL: "https://backend-chat-app-4.onrender.com/api",
-  timeout: 5000,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },

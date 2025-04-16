@@ -9,7 +9,8 @@ import {
   Platform,
 } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
-
+import { fetchRegister } from '../redux/api/authApi'
+import { useDispatch } from 'react-redux';
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +22,7 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const dispatch = useDispatch()
   const handleNameChange = (text) => {
     setName(text);
     if (!text.trim()) {
@@ -104,8 +105,8 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     if (!isValid) return;
+    dispatch(fetchRegister({ email: email, password: password, userName: name }))
 
-    console.log('Đăng ký với:', { name, email, password });
     navigation.navigate('LoginScreen');
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,15 +13,50 @@ import {
 import { Avatar, IconButton } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
 import EmojiSelector from 'react-native-emoji-selector';
+import { connectSocket } from '../service/socket';
+import { fetchMessages } from '../redux/api/messageApi';
+import { getCurrentMe } from '../redux/api/userApi';
+import { useSelector, useDispatch } from 'react-redux';
+
+let socket = null;
+
 const ChatDetailScreen = ({ navigation, route }) => {
-  const user = route.params?.user || null
-  const [messages, setMessages] = useState([]);
+  const { user, conversationId, isGroup } = route.params || {};
+  const dispatch = useDispatch();
+  const messages = useSelector((state) => state.messageReducer.messages);
+  const [localMessage, setLocalMessage] = useState(messages)
+  const me = useSelector((state) => state.userReducer.me);
   const [input, setInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  console.log(user)
+
+  useEffect(() => {
+    socket = connectSocket();
+    if (me) {
+      socket.emit("register", me.idUser)
+    }
+    dispatch(fetchMessages(conversationId));
+    dispatch(getCurrentMe())
+    socket.on('receive_message', (newMessage) => {
+      setLocalMessage((prevMessages) => {
+        const updatedMessages = [...prevMessages, newMessage];
+        updatedMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        return updatedMessages;
+      });
+    });
+    return () => {
+      if (socket) {
+        socket.off('new_message');
+      }
+    };
+  }, []);
+  useEffect(() => {
+    if (messages.length) {
+      setLocalMessage(messages)
+    }
+  }, [messages])
   const sendMessage = () => {
     if (input.trim()) {
-      setMessages([{ id: Date.now().toString(), text: input, sender: 'me' }, ...messages]);
+      socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input });
       setInput('');
       setShowEmojiPicker(false);
     }
@@ -35,34 +70,29 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
     if (result.assets && result.assets.length > 0) {
       const imageUri = result.assets[0].uri;
-      setMessages([...messages, { id: Date.now().toString(), image: imageUri, sender: 'me' }]);
+      socket.emit('send_image', { conversationId, sender: user.id, imageUri });
     }
   };
 
-  const renderMessage = ({ item }) => (
-    <View style={[styles.messageContainer, item.sender === 'me' ? styles.sent : styles.received]}>
-      {item.text && <Text style={styles.messageText}>{item.text}</Text>}
-      {item.image && <Image source={{ uri: item.image }} style={styles.imageMessage} />}
-    </View>
-  );
+  const renderMessage = ({ item }) => {
+    return (
+      <View style={[styles.messageContainer, item.sender === me.idUser ? styles.sent : styles.received]}>
+        {item.content && <Text style={styles.messageText}>{item.content}</Text>}
+        {item.image && <Image source={{ uri: item.image }} style={styles.imageMessage} />}
+      </View>
+    );
+  }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={80}
-      style={{ height: "100%" }}
-    >
-      <View style={{ flex: 1, height: "100%", position: "relative" }}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
+      <View style={{ flex: 1, height: '100%', position: 'relative' }}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => navigation.navigate("Main")}>
             <IconButton icon="arrow-left" size={24} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.profileSection}
-            onPress={() => navigation.navigate('ProfileScreen', { user })}
-          >
+          <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('ProfileScreen', { user })}>
             {user?.avatar ? (
               <Avatar.Text size={40} label={user?.avatar} />
             ) : (
@@ -80,8 +110,8 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
         {/* Chat Messages */}
         <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id}
+          data={localMessage}
+          keyExtractor={(item) => item._id.toString()}
           renderItem={renderMessage}
           contentContainerStyle={styles.messagesList}
           inverted
@@ -91,7 +121,6 @@ const ChatDetailScreen = ({ navigation, route }) => {
         {showEmojiPicker && (
           <EmojiSelector
             onEmojiSelected={(emoji) => setInput((prev) => prev + emoji)}
-            // emojiStyle={{ fontSize: 24 }}
             showSearchBar={false}
             showTabs={true}
           />
@@ -100,11 +129,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
         {/* Input Box */}
         <View style={styles.inputContainer}>
           <IconButton icon="camera" size={24} onPress={sendImage} />
-          <IconButton
-            icon="emoticon-outline"
-            size={24}
-            onPress={() => setShowEmojiPicker(!showEmojiPicker)}
-          />
+          <IconButton icon="emoticon-outline" size={24} onPress={() => setShowEmojiPicker(!showEmojiPicker)} />
           <TextInput
             style={styles.input}
             value={input}
@@ -160,7 +185,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   inputContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',

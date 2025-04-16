@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchConversations } from '../redux/api/conversationApi';
 import { ChatSkeletonItem } from '../screens';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ChatListScreen = ({ navigation }) => {
   const [messages, setMessages] = useState([]);
@@ -12,6 +13,11 @@ const ChatListScreen = ({ navigation }) => {
   const dispatch = useDispatch()
   const conversations = useSelector(state => state.conversationReducer.conversations)
   const loading = useSelector(state => state.conversationReducer.loading)
+  const token = useSelector(state => state.authReducer.token)
+  console.log(conversations)
+  if (token) {
+    AsyncStorage.setItem("userToken", token)
+  }
   console.log(conversations)
   useEffect(() => {
     dispatch(fetchConversations())
@@ -49,13 +55,14 @@ const ChatListScreen = ({ navigation }) => {
           data={conversations}
           keyExtractor={(item) => item.conversation._id}
           renderItem={({ item }) => {
-            const { user, lastMessage } = item;
-            const avatarUrl = user.avatar;
+            const { plainUser, lastMessage } = item;
+            const user = plainUser
+            const avatarUrl = user?.avatar;
 
             return (
               <TouchableOpacity
                 style={styles.messageItem}
-                onPress={() => navigation.navigate('ChatDetailScreen', { user })}
+                onPress={() => navigation.navigate('ChatDetailScreen', { user, isGroup: item?.conversation.isGroup, conversationId: item?.conversation._id })}
               >
                 {avatarUrl ? (
                   <Avatar.Image size={40} source={{ uri: avatarUrl }} />

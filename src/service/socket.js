@@ -6,7 +6,7 @@ let socket = null;
 
 export const connectSocket = () => {
     // Kết nối tới WebSocket server (thay đổi URL nếu cần)
-    socket = io('http://localhost:3000', {
+    socket = io('https://backend-chat-app-4.onrender.com', {
         transports: ['websocket'],
         reconnect: true,
     });
@@ -14,27 +14,5 @@ export const connectSocket = () => {
     socket.on('connect', () => {
         console.log('Connected to WebSocket server');
     });
-
-    socket.on('disconnect', () => {
-        console.log('Disconnected from WebSocket server');
-    });
-
-    socket.on('message', (message) => {
-        console.log('Received message:', message);
-    });
+    return socket
 };
-
-export const sendMessage = (message) => {
-    if (socket) {
-        socket.emit('message', message);
-    }
-};
-
-export const disconnectSocket = () => {
-    if (socket) {
-        socket.disconnect();
-        console.log('Socket disconnected');
-    }
-};
-
-export const getSocket = () => socket;

@@ -9,3 +9,13 @@ export const fetchUsers = createAsyncThunk('user/fetchUsers', async () => {
     throw new Error(error.message || 'Lỗi không xác định');
   }
 });
+
+export const getCurrentMe = createAsyncThunk('user/fetchMe', async () => {
+  try {
+    const response = await axios.get(`/user/me`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.message || 'Lỗi không xác định');
+  }
+});
+

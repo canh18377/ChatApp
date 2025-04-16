@@ -4,7 +4,6 @@ import { HomeScreen, MenuScreen } from '../screens';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Tab = createBottomTabNavigator();
-
 const MainTabNavigator = () => {
   return (
     <Tab.Navigator

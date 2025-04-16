@@ -4,6 +4,8 @@ import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SuccessModal from '../components/Modals/SuccessModal';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchRegister, fetchLogin } from '../redux/api/authApi'
 const baseURL = process.env.REACT_NATIVE_APP_API_BASE_URL
 
 const LoginScreen = ({ navigation }) => {
@@ -14,7 +16,9 @@ const LoginScreen = ({ navigation }) => {
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
-
+  const dispatch = useDispatch()
+  const authenticated = useSelector(state => state.authReducer.authenticated)
+  console.log(authenticated)
   const validateForm = () => {
     let isValid = true;
 
@@ -64,30 +68,23 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     const isValid = validateForm();
     if (isValid) {
-      console.log('Đăng nhập thành công');
-
-      //  Lưu token vào AsyncStorage (fake)
-      const fakeToken = 'abc123';
-      await AsyncStorage.setItem('userToken', fakeToken);
-
-      // Hiện modal và chuyển sang HomeScreen
-      setSuccessModalVisible(true);
-      setTimeout(() => {
-        setSuccessModalVisible(false);
-
-        // Sử dụng navigation.reset để xóa stack login khỏi lịch sử
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Main' }],
-        });
-      }, 500);
+      dispatch(fetchLogin({ email: email, password: password }))
     } else {
       console.log('Form không hợp lệ');
     }
   };
+  useEffect(() => {
+    if (authenticated) {
+      setSuccessModalVisible(true);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' }],
+      })
+    }
+  }, [authenticated])
 
   const handleRegister = () => {
     navigation.navigate('RegisterScreen');
