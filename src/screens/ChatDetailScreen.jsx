@@ -27,19 +27,22 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
-    const socket = getSocket()
     dispatch(fetchMessages(conversationId));
     dispatch(getCurrentMe())
-    socket.on('receive_message', (newMessage) => {
+    const handleReceiveMessage = (newMessage) => {
       setLocalMessage((prevMessages) => {
         const updatedMessages = [...prevMessages, newMessage];
         updatedMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         return updatedMessages;
       });
-    });
+    };
+    const socket = getSocket()
+    if (socket) {
+      getSocket().on('receive_message', handleReceiveMessage);
+    }
     return () => {
       if (socket) {
-        socket.off('new_message');
+        getSocket().off('receive_message', handleReceiveMessage);
       }
     };
   }, []);
@@ -49,7 +52,8 @@ const ChatDetailScreen = ({ navigation, route }) => {
     }
   }, [messages])
   const sendMessage = () => {
-    if (input.trim()) {
+    const socket = getSocket()
+    if (input.trim() && socket) {
       socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input });
       setInput('');
       setShowEmojiPicker(false);
@@ -179,7 +183,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   inputContainer: {
-    position: 'absolute',
+    position: "static",
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',

@@ -8,7 +8,6 @@ import { ChatSkeletonItem } from '../screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentMe } from '../redux/api/userApi';
 import { connectSocket } from '../service/socket';
-let socket = null
 const ChatListScreen = ({ navigation }) => {
   const [messages, setMessages] = useState([]);
   const dispatch = useDispatch()
@@ -26,7 +25,7 @@ const ChatListScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    socket = connectSocket();
+    const socket = connectSocket();
     if (me) {
       socket.emit("register", me.idUser)
     }
