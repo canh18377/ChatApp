@@ -7,6 +7,7 @@ import {
   MyProfileScreen,
   ChatDetailScreen,
   SplashScreen,
+  CallScreen
 } from '../screens';
 import MainTabNavigator from './MainTabNavigator';
 // Mảng chứa các màn hình
@@ -19,4 +20,5 @@ export const screens = [
   { name: 'RegisterScreen', component: RegisterScreen },
   { name: 'ProfileScreen', component: ProfileScreen },
   { name: 'MyProfileScreen', component: MyProfileScreen },
+  { name: 'CallScreen', component: CallScreen },
 ];

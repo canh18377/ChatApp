@@ -30,7 +30,6 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log(error)
     if (error.response) {
       const { status } = error.response;
       if (status === 401) {
@@ -49,7 +48,6 @@ instance.interceptors.response.use(
 // Hàm giả lập lấy token từ AsyncStorage hoặc SecureStorage
 const getToken = async () => {
   const token = await AsyncStorage.getItem("userToken")
-  console.log(token)
   return token; // Thay thế bằng logic lấy token thực tế
 };
 
