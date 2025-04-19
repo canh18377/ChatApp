@@ -18,7 +18,6 @@ const LoginScreen = ({ navigation }) => {
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const dispatch = useDispatch()
   const authenticated = useSelector(state => state.authReducer.authenticated)
-  console.log(authenticated)
   const validateForm = () => {
     let isValid = true;
 
@@ -104,7 +103,6 @@ const LoginScreen = ({ navigation }) => {
         const tokenPart = url.split('token=');
         if (tokenPart.length > 1) {
           const token = tokenPart[1];
-          console.log(token)
           await AsyncStorage.setItem('userToken', token);
           setSuccessModalVisible(true);
           setSuccessModalVisible(false);

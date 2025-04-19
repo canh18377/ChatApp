@@ -6,7 +6,7 @@ const Stack = createNativeStackNavigator();
 
 const StackNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
       {screens.map((screen) => {
         return (
           <Stack.Screen key={screen.name} name={screen.name} component={screen.component} />

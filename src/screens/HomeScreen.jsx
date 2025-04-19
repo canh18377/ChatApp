@@ -7,9 +7,10 @@ import { fetchConversations } from '../redux/api/conversationApi';
 import { ChatSkeletonItem } from '../screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentMe } from '../redux/api/userApi';
-import { connectSocket } from '../service/socket';
+import { connectSocket, getSocket } from '../service/socket';
+connectSocket();
 const ChatListScreen = ({ navigation }) => {
-  const [messages, setMessages] = useState([]);
+  const [tokenCall, setTokenCall] = useState(null);
   const dispatch = useDispatch()
   const conversations = useSelector(state => state.conversationReducer.conversations)
   const loading = useSelector(state => state.conversationReducer.loading)
@@ -25,11 +26,25 @@ const ChatListScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    const socket = connectSocket();
     if (me) {
-      socket.emit("register", me.idUser)
+      const socket = getSocket()
+      socket.emit("register", me.idUser);
+      const handleReceiveToken = (token_call) => {
+        setTokenCall(token_call);
+      };
+      socket.on("receive_token", handleReceiveToken);
+
+      return () => {
+        socket.off("receive_token", handleReceiveToken); // ✅ clear listener
+      };
     }
-  }, [me])
+  }, [me]);
+
+  useEffect(() => {
+    if (tokenCall) {
+      navigation.navigate("CallScreen", { tokenCall })
+    }
+  }, [tokenCall])
   return (
     <View style={styles.container}>
       {/* Search Box */}
@@ -44,7 +59,6 @@ const ChatListScreen = ({ navigation }) => {
 
       <View style={styles.header}>
         <Text style={styles.headerText}>Messages</Text>
-        <Text style={styles.countText}>({messages.length})</Text>
       </View>
 
       {loading || isLoading ? (
@@ -69,7 +83,7 @@ const ChatListScreen = ({ navigation }) => {
             return (
               <TouchableOpacity
                 style={styles.messageItem}
-                onPress={() => navigation.navigate('ChatDetailScreen', { user, isGroup: item?.conversation.isGroup, conversationId: item?.conversation._id })}
+                onPress={() => navigation.navigate('ChatDetailScreen', { user, isGroup: item?.conversation.isGroup, conversationId: item?.conversation._id, tokenCall })}
               >
                 {avatarUrl ? (
                   <Avatar.Image size={40} source={{ uri: avatarUrl }} />

@@ -38,11 +38,11 @@ const ChatDetailScreen = ({ navigation, route }) => {
     };
     const socket = getSocket()
     if (socket) {
-      getSocket().on('receive_message', handleReceiveMessage);
+      socket.on('receive_message', handleReceiveMessage);
     }
     return () => {
       if (socket) {
-        getSocket().off('receive_message', handleReceiveMessage);
+        socket.off('receive_message', handleReceiveMessage);
       }
     };
   }, []);
@@ -102,7 +102,10 @@ const ChatDetailScreen = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
 
-          <IconButton icon="phone" size={24} />
+          <IconButton icon="phone" onPress={() => {
+            const socket = getSocket()
+            socket.emit("start_call_audio", { toUserId: user.idUser, fromUserId: me?.idUser })
+          }} size={24} />
           <IconButton icon="video" size={24} />
         </View>
 
