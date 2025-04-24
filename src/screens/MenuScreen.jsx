@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { Avatar, Switch, List, Divider } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import { useSelector } from 'react-redux';
 const MenuScreen = ({ navigation }) => {
   const [darkMode, setDarkMode] = useState(false);
-
+  const me = useSelector((state) => state.userReducer.me);
   const handleLogout = async () => {
     Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất?', [
       { text: 'Hủy' },
@@ -28,8 +28,8 @@ const MenuScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Thông tin người dùng */}
       <View style={styles.profileContainer}>
-        <Avatar.Icon size={70} icon="account-circle" style={styles.avatar} />
-        <Text style={styles.name}>Duy Đinh</Text>
+        <Image source={me?.avatar} />
+        <Text style={styles.name}>{me?.name}</Text>
       </View>
 
       <Divider style={styles.divider} />

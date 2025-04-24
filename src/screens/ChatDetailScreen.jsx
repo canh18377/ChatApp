@@ -80,7 +80,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
       </View>
     );
   }
-
+  console.log(user)
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
       <View style={{ flex: 1, height: '100%', position: 'relative' }}>
@@ -92,7 +92,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
           <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('ProfileScreen', { user })}>
             {user?.avatar ? (
-              <Avatar.Text size={40} label={user?.avatar} />
+              <Image source={user?.avatar} />
             ) : (
               <Avatar.Icon size={40} icon="account" />
             )}

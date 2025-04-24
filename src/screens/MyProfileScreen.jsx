@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Avatar, Button, IconButton } from 'react-native-paper';
-
+import { useSelector } from 'react-redux';
 const MyProfileScreen = ({ navigation }) => {
   const [name, setName] = useState('Nguyễn Văn A');
   const [gender, setGender] = useState('Nam');
@@ -12,6 +12,7 @@ const MyProfileScreen = ({ navigation }) => {
   const [newName, setNewName] = useState(name);
   const [newGender, setNewGender] = useState(gender);
   const [newDob, setNewDob] = useState(dob);
+  const me = useSelector((state) => state.userReducer.me);
 
   const pickImage = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
