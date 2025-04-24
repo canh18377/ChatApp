@@ -7,6 +7,7 @@ import MyProfileScreen from './MyProfileScreen';
 import RegisterScreen from './RegisterScreen';
 import SplashScreen from './SplashScreen';
 import ChatSkeletonItem from '../components/ChatSkeletonItem';
+import FriendsScreen from './FriendsScreen';
 import CallScreen from './CallScreen';
 export {
   SplashScreen,
@@ -18,5 +19,6 @@ export {
   MyProfileScreen,
   RegisterScreen,
   ChatSkeletonItem,
+  FriendsScreen,
   CallScreen
 };
