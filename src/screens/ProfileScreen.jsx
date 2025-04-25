@@ -1,4 +1,4 @@
-// src/screens/ProfileScreen.js
+// src/screens/ProfileScreen.jsx
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Avatar, Text, Divider, List, useTheme } from 'react-native-paper';
@@ -6,7 +6,8 @@ import { IconButton } from 'react-native-paper';
 
 const ProfileScreen = ({ navigation, route }) => {
   const theme = useTheme();
-  const { user } = route.params;
+  const { userId, name, avatar } = route.params; // Nhận các tham số trực tiếp
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -15,8 +16,9 @@ const ProfileScreen = ({ navigation, route }) => {
 
       {/* Avatar & Tên người dùng */}
       <View style={styles.profileContainer}>
-        <Avatar.Image size={100} source={{ uri: user.avatar }} />
-        <Text style={styles.name}>{user.name}</Text>
+        <Avatar.Image size={100} source={{ uri: avatar }} />
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.username}>ID: {userId}</Text> {/* Hiển thị userId nếu cần */}
       </View>
 
       {/* Danh sách tuỳ chọn */}
@@ -24,25 +26,25 @@ const ProfileScreen = ({ navigation, route }) => {
         <List.Item
           title="Ảnh & video"
           left={(props) => <List.Icon {...props} icon="image-multiple-outline" />}
-          onPress={() => { }}
+          onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="Tìm trong cuộc trò chuyện"
           left={(props) => <List.Icon {...props} icon="magnify" />}
-          onPress={() => { }}
+          onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="Tắt thông báo"
           left={(props) => <List.Icon {...props} icon="bell-off-outline" />}
-          onPress={() => { }}
+          onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="Chặn người này"
           left={(props) => <List.Icon {...props} icon="block-helper" />}
-          onPress={() => { }}
+          onPress={() => {}}
         />
         <Divider />
         <List.Item
@@ -51,7 +53,7 @@ const ProfileScreen = ({ navigation, route }) => {
           left={(props) => (
             <List.Icon {...props} icon="delete-outline" color={theme.colors.error} />
           )}
-          onPress={() => { }}
+          onPress={() => {}}
         />
       </View>
     </View>
@@ -70,7 +72,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
   },
-
   profileContainer: {
     alignItems: 'center',
     paddingVertical: 24,
@@ -83,9 +84,6 @@ const styles = StyleSheet.create({
   username: {
     color: 'gray',
     marginBottom: 12,
-  },
-  editButton: {
-    marginTop: 10,
   },
   optionsContainer: {
     marginTop: 16,
