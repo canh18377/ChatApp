@@ -6,7 +6,7 @@ import {
     ChannelProfileType,
     ClientRoleType,
 } from 'react-native-agora';
-
+import { useSelector } from 'react-redux';
 const APP_ID = 'ab39965c3627442e8d8bf38a47c911d2';
 
 const AudioCallScreen = ({ navigation, route }) => {
@@ -15,10 +15,11 @@ const AudioCallScreen = ({ navigation, route }) => {
     const receiverAvatar = route.params.tokenCall.receiverAvatar;
     const callerName = route.params.tokenCall.callerName;
     const callerAvatar = route.params.tokenCall.callerAvatar;
+    console.log(route.params)
     const [engine, setEngine] = useState(null);
     const [callStatus, setCallStatus] = useState('waiting'); // 'waiting' | 'inCall' | 'ended'
     const [remoteJoined, setRemoteJoined] = useState(false);
-
+    const me = useSelector((state) => state.userReducer.me);
     useEffect(() => {
         const init = async () => {
             if (Platform.OS === 'android') {
@@ -52,7 +53,7 @@ const AudioCallScreen = ({ navigation, route }) => {
                 },
             });
 
-            rtcEngine.joinChannel(token, channelName, uid, {
+            rtcEngine.joinChannelWithUserAccount(token, channelName, uid, {
                 clientRoleType: ClientRoleType.ClientRoleBroadcaster,
             });
 
@@ -100,23 +101,33 @@ const AudioCallScreen = ({ navigation, route }) => {
             {callStatus === 'inCall' && (
                 <>
                     {renderAvatar()}
-                    <Text style={styles.statusText}>Đang gọi với {callerName || receiverName}</Text>
+                    <Text style={styles.statusText}>Đang trong cuộc gọi với {callerName || receiverName}</Text>
                 </>
             )}
-
             {callStatus === 'ended' && (
                 <Text style={styles.statusText}>Cuộc gọi đã kết thúc</Text>
             )}
 
-            {callStatus !== 'ended' && (
-                <IconButton
-                    icon="phone-hangup"
-                    size={50}
-                    onPress={handleEndCall}
-                    color="red"
-                    style={styles.hangupButton}
-                />
-            )}
+            <View style={{ display: "flex" }}>
+                {callStatus !== 'ended' && (
+                    <IconButton
+                        icon="phone-hangup"
+                        size={50}
+                        onPress={handleEndCall}
+                        color="red"
+                        style={styles.hangupButton}
+                    />
+                )}
+                {uid !== me.idUser && callStatus !== 'ended' && (
+                    <IconButton
+                        icon="phone"
+                        size={50}
+                        onPress={handleEndCall}
+                        color="red"
+                        style={styles.hangonButton}
+                    />
+                )}
+            </View>
         </View>
     );
 };
@@ -127,6 +138,7 @@ const styles = StyleSheet.create({
     username: { fontSize: 22, fontWeight: 'bold', marginBottom: 8 },
     statusText: { fontSize: 18, marginBottom: 30 },
     hangupButton: { backgroundColor: '#f44336', borderRadius: 50 },
+    hangonButton: { backgroundColor: 'green', borderRadius: 50 },
 });
 
 export default AudioCallScreen;

@@ -30,6 +30,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
     dispatch(fetchMessages(conversationId));
     dispatch(getCurrentMe())
     const handleReceiveMessage = (newMessage) => {
+      console.log(newMessage)
       setLocalMessage((prevMessages) => {
         const updatedMessages = [...prevMessages, newMessage];
         updatedMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -80,7 +81,6 @@ const ChatDetailScreen = ({ navigation, route }) => {
       </View>
     );
   }
-  console.log(user)
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
       <View style={{ flex: 1, height: '100%', position: 'relative' }}>
