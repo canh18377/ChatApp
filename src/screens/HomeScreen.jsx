@@ -1,50 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { Avatar, Badge } from 'react-native-paper';
+import { Avatar } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchConversations } from '../redux/api/conversationApi';
 import { ChatSkeletonItem } from '../screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getCurrentMe } from '../redux/api/userApi';
+import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
+import debounce from 'lodash.debounce';
+
 connectSocket();
+
 const ChatListScreen = ({ navigation }) => {
   const [tokenCall, setTokenCall] = useState(null);
-  const dispatch = useDispatch()
-  const conversations = useSelector(state => state.conversationReducer.conversations)
-  const loading = useSelector(state => state.conversationReducer.loading)
-  const isLoading = useSelector(state => state.userReducer.loading)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
+  const dispatch = useDispatch();
+  const conversations = useSelector((state) => state.conversationReducer.conversations);
+  const loading = useSelector((state) => state.conversationReducer.loading);
+  const isLoading = useSelector((state) => state.userReducer.loading);
   const me = useSelector((state) => state.userReducer.me);
-  const token = useSelector(state => state.authReducer.token)
+  const token = useSelector((state) => state.authReducer.token);
+  const searchResults = useSelector((state) => state.userReducer.searchResults);
+
   if (token) {
-    AsyncStorage.setItem("userToken", token)
+    AsyncStorage.setItem('userToken', token);
   }
+
   useEffect(() => {
-    dispatch(getCurrentMe())
-    dispatch(fetchConversations())
+    dispatch(getCurrentMe());
+    dispatch(fetchConversations());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (me) {
-      const socket = getSocket()
-      socket.emit("register", me.idUser);
+      const socket = getSocket();
+      socket.emit('register', me.idUser);
+
       const handleReceiveToken = (token_call) => {
         setTokenCall(token_call);
       };
-      socket.on("receive_token", handleReceiveToken);
+
+      socket.on('receive_token', handleReceiveToken);
 
       return () => {
-        socket.off("receive_token", handleReceiveToken); // ✅ clear listener
+        socket.off('receive_token', handleReceiveToken);
       };
     }
   }, [me]);
 
   useEffect(() => {
     if (tokenCall) {
-      navigation.navigate("CallScreen", { tokenCall })
+      navigation.navigate('CallScreen', { tokenCall });
     }
-  }, [tokenCall])
+  }, [tokenCall, navigation]);
+
+  // debounce tìm kiếm người dùng
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncedSearch = useCallback(
+    debounce((text) => {
+      if (text.trim() === '') {
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
+      dispatch(searchUsers(text));
+    }, 400),
+    [],
+  );
+
+  const handleSearch = (text) => {
+    setSearchQuery(text);
+    debouncedSearch(text);
+  };
+
   return (
     <View style={styles.container}>
       {/* Search Box */}
@@ -54,6 +86,9 @@ const ChatListScreen = ({ navigation }) => {
           style={styles.searchInput}
           placeholder="Search messages..."
           placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={handleSearch}
+          onFocus={() => setIsSearching(true)}
         />
       </View>
 
@@ -61,7 +96,34 @@ const ChatListScreen = ({ navigation }) => {
         <Text style={styles.headerText}>Messages</Text>
       </View>
 
-      {loading || isLoading ? (
+      {isSearching ? (
+        searchResults.length > 0 ? (
+          <FlatList
+            data={searchResults}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.messageItem}
+                onPress={() => {
+                  setIsSearching(false);
+                  setSearchQuery('');
+                  navigation.navigate('ChatDetailScreen', { user: item, isGroup: false });
+                }}
+              >
+                <Avatar.Icon size={40} icon="account" />
+                <View style={styles.messageContent}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <Text style={styles.messageText}>Nhấn để trò chuyện</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        ) : (
+          <View style={{ alignItems: 'center', marginTop: 30 }}>
+            <Text style={{ color: '#999', fontSize: 16 }}>Không tìm thấy người dùng nào</Text>
+          </View>
+        )
+      ) : loading || isLoading ? (
         <View>
           {Array.from({ length: conversations.length }).map((_, index) => (
             <ChatSkeletonItem key={index} />
@@ -77,13 +139,20 @@ const ChatListScreen = ({ navigation }) => {
           keyExtractor={(item) => item.conversation._id}
           renderItem={({ item }) => {
             const { plainUser, lastMessage } = item;
-            const user = plainUser
+            const user = plainUser;
             const avatarUrl = user?.avatar;
 
             return (
               <TouchableOpacity
                 style={styles.messageItem}
-                onPress={() => navigation.navigate('ChatDetailScreen', { user, isGroup: item?.conversation.isGroup, conversationId: item?.conversation._id, tokenCall })}
+                onPress={() =>
+                  navigation.navigate('ChatDetailScreen', {
+                    user,
+                    isGroup: item?.conversation.isGroup,
+                    conversationId: item?.conversation._id,
+                    tokenCall,
+                  })
+                }
               >
                 {avatarUrl ? (
                   <Avatar.Image size={40} source={{ uri: avatarUrl }} />
@@ -99,18 +168,21 @@ const ChatListScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.rightSection}>
                   <Text style={styles.time}>
-                    {new Date(lastMessage?.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(lastMessage?.timestamp).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </Text>
                 </View>
               </TouchableOpacity>
             );
           }}
         />
-
       )}
     </View>
   );
 };
+
 export default ChatListScreen;
 
 const styles = StyleSheet.create({
@@ -148,4 +220,3 @@ const styles = StyleSheet.create({
   badge: { backgroundColor: '#007AFF', color: '#fff', marginTop: 5 },
   avatarText: { backgroundColor: '#4A90E2' },
 });
-

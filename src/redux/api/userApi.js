@@ -19,3 +19,14 @@ export const getCurrentMe = createAsyncThunk('user/fetchMe', async () => {
   }
 });
 
+export const searchUsers = createAsyncThunk(
+  'user/searchUsers',
+  async (query, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/user/getUsers/${query}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Lỗi khi tìm kiếm người dùng');
+    }
+  },
+);

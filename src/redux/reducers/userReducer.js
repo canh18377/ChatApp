@@ -1,10 +1,11 @@
-import { fetchUsers, getCurrentMe } from '../api/userApi';
+import { fetchUsers, getCurrentMe, searchUsers } from '../api/userApi';
 import { createSlice } from '@reduxjs/toolkit';
 
 const userSlice = createSlice({
   name: 'user',
   initialState: {
     users: [],
+    searchResults: [],
     me: null,
     loading: false,
     error: null,
@@ -36,6 +37,18 @@ const userSlice = createSlice({
       .addCase(getCurrentMe.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      })
+      .addCase(searchUsers.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(searchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchResults = action.payload;
+      })
+      .addCase(searchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.searchResults = [];
+        state.error = action.payload;
       });
   },
 });
