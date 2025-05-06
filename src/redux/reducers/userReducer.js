@@ -1,4 +1,4 @@
-import { fetchUsers, getCurrentMe, searchUsers } from '../api/userApi';
+import { fetchUsers, getCurrentMe, searchUsers, updateUser } from '../api/userApi';
 import { createSlice } from '@reduxjs/toolkit';
 
 const userSlice = createSlice({
@@ -49,6 +49,18 @@ const userSlice = createSlice({
         state.loading = false;
         state.searchResults = [];
         state.error = action.payload;
+      })
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.me = action.payload;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
       });
   },
 });

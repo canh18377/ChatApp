@@ -18,7 +18,17 @@ export const getCurrentMe = createAsyncThunk('user/fetchMe', async () => {
     throw new Error(error.message || 'Lỗi không xác định');
   }
 });
-
+export const updateUser = createAsyncThunk(
+  'user/updateUser',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.put('/user/update', userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Lỗi khi cập nhật thông tin');
+    }
+  },
+);
 export const searchUsers = createAsyncThunk(
   'user/searchUsers',
   async (query, { rejectWithValue }) => {

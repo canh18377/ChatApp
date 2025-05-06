@@ -21,23 +21,23 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const { user, conversationId, isGroup } = route.params || {};
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.messageReducer.messages);
-  const [localMessage, setLocalMessage] = useState(messages)
+  const [localMessage, setLocalMessage] = useState(messages);
   const me = useSelector((state) => state.userReducer.me);
   const [input, setInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
     dispatch(fetchMessages(conversationId));
-    dispatch(getCurrentMe())
+    dispatch(getCurrentMe());
     const handleReceiveMessage = (newMessage) => {
-      console.log(newMessage)
+      console.log(newMessage);
       setLocalMessage((prevMessages) => {
         const updatedMessages = [...prevMessages, newMessage];
         updatedMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         return updatedMessages;
       });
     };
-    const socket = getSocket()
+    const socket = getSocket();
     if (socket) {
       socket.on('receive_message', handleReceiveMessage);
     }
@@ -46,16 +46,21 @@ const ChatDetailScreen = ({ navigation, route }) => {
         socket.off('receive_message', handleReceiveMessage);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     if (messages.length) {
-      setLocalMessage(messages)
+      setLocalMessage(messages);
     }
-  }, [messages])
+  }, [messages]);
   const sendMessage = () => {
-    const socket = getSocket()
+    const socket = getSocket();
     if (input.trim() && socket) {
-      socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input });
+      socket.emit('private_message', {
+        senderId: me?.idUser,
+        receiverId: user.idUser,
+        message: input,
+      });
       setInput('');
       setShowEmojiPicker(false);
     }
@@ -69,28 +74,41 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
     if (result.assets && result.assets.length > 0) {
       const imageUri = result.assets[0].uri;
+      // eslint-disable-next-line no-undef
       socket.emit('send_image', { conversationId, sender: user.id, imageUri });
     }
   };
 
   const renderMessage = ({ item }) => {
     return (
-      <View style={[styles.messageContainer, item.sender === me?.idUser ? styles.sent : styles.received]}>
+      <View
+        style={[
+          styles.messageContainer,
+          item.sender === me?.idUser ? styles.sent : styles.received,
+        ]}
+      >
         {item.content && <Text style={styles.messageText}>{item.content}</Text>}
         {item.image && <Image source={{ uri: item.image }} style={styles.imageMessage} />}
       </View>
     );
-  }
+  };
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={80}
+      style={{ height: '100%' }}
+    >
       <View style={{ flex: 1, height: '100%', position: 'relative' }}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.navigate("Main")}>
+          <TouchableOpacity onPress={() => navigation.navigate('Main')}>
             <IconButton icon="arrow-left" size={24} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('ProfileScreen', { user })}>
+          <TouchableOpacity
+            style={styles.profileSection}
+            onPress={() => navigation.navigate('ProfileScreen', { user })}
+          >
             {user?.avatar ? (
               <Image source={user?.avatar} />
             ) : (
@@ -102,10 +120,14 @@ const ChatDetailScreen = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
 
-          <IconButton icon="phone" onPress={() => {
-            const socket = getSocket()
-            socket.emit("start_call_audio", { toUserId: user.idUser, fromUserId: me?.idUser })
-          }} size={24} />
+          <IconButton
+            icon="phone"
+            onPress={() => {
+              const socket = getSocket();
+              socket.emit('start_call_audio', { toUserId: user.idUser, fromUserId: me?.idUser });
+            }}
+            size={24}
+          />
           <IconButton icon="video" size={24} />
         </View>
 
@@ -130,7 +152,11 @@ const ChatDetailScreen = ({ navigation, route }) => {
         {/* Input Box */}
         <View style={styles.inputContainer}>
           <IconButton icon="camera" size={24} onPress={sendImage} />
-          <IconButton icon="emoticon-outline" size={24} onPress={() => setShowEmojiPicker(!showEmojiPicker)} />
+          <IconButton
+            icon="emoticon-outline"
+            size={24}
+            onPress={() => setShowEmojiPicker(!showEmojiPicker)}
+          />
           <TextInput
             style={styles.input}
             value={input}
@@ -186,7 +212,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   inputContainer: {
-    position: "static",
+    position: 'static',
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',

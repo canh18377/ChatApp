@@ -3,10 +3,9 @@ import { View, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import SuccessModal from '../components/Modals/SuccessModal';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchRegister, fetchLogin } from '../redux/api/authApi'
-const baseURL = process.env.REACT_NATIVE_APP_API_BASE_URL
+import { fetchRegister, fetchLogin } from '../redux/api/authApi';
+const baseURL = process.env.REACT_NATIVE_APP_API_BASE_URL;
 
 const LoginScreen = ({ navigation }) => {
   const theme = useTheme();
@@ -16,8 +15,8 @@ const LoginScreen = ({ navigation }) => {
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
-  const dispatch = useDispatch()
-  const authenticated = useSelector(state => state.authReducer.authenticated)
+  const dispatch = useDispatch();
+  const authenticated = useSelector((state) => state.authReducer.authenticated);
   const validateForm = () => {
     let isValid = true;
 
@@ -70,7 +69,7 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = () => {
     const isValid = validateForm();
     if (isValid) {
-      dispatch(fetchLogin({ email: email, password: password }))
+      dispatch(fetchLogin({ email: email, password: password }));
     } else {
       console.log('Form không hợp lệ');
     }
@@ -81,20 +80,21 @@ const LoginScreen = ({ navigation }) => {
       navigation.reset({
         index: 0,
         routes: [{ name: 'Main' }],
-      })
+      });
     }
-  }, [authenticated])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated]);
 
   const handleRegister = () => {
     navigation.navigate('RegisterScreen');
   };
 
   const handleGoogleLogin = () => {
-    Linking.openURL(`https://backend-chat-app-4.onrender.com/api/auth/google`)
+    Linking.openURL(`https://backend-chat-app-4.onrender.com/api/auth/google`);
   };
 
   const handleFacebookLogin = () => {
-    Linking.openURL(`https://backend-chat-app-4.onrender.com/api/auth/facebook`)
+    Linking.openURL(`https://backend-chat-app-4.onrender.com/api/auth/facebook`);
   };
   useEffect(() => {
     const handleDeepLink = async (event) => {
@@ -115,13 +115,14 @@ const LoginScreen = ({ navigation }) => {
           console.log('No token found in the URL');
         }
       }
-    }
+    };
 
     Linking.addEventListener('url', handleDeepLink);
 
     return () => {
       Linking.removeAllListeners('url', handleDeepLink);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -214,7 +215,7 @@ const LoginScreen = ({ navigation }) => {
         </Text>
       </View>
       {/* Modal thông báo thành công */}
-      <SuccessModal visible={successModalVisible} message="Đăng nhập thành công!" />
+      {/* <SuccessModal visible={successModalVisible} message="Đăng nhập thành công!" /> */}
     </View>
   );
 };

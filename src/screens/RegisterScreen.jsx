@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
-import { fetchRegister } from '../redux/api/authApi'
+import { fetchRegister } from '../redux/api/authApi';
 import { useDispatch } from 'react-redux';
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -22,7 +22,7 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const handleNameChange = (text) => {
     setName(text);
     if (!text.trim()) {
@@ -105,7 +105,7 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     if (!isValid) return;
-    dispatch(fetchRegister({ email: email, password: password, userName: name }))
+    dispatch(fetchRegister({ email: email, password: password, userName: name }));
 
     navigation.navigate('LoginScreen');
   };
@@ -118,7 +118,7 @@ const RegisterScreen = ({ navigation }) => {
           style={{ flex: 1 }}
         >
           <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-            <Text style={styles.title}>Tạo tài khoản</Text>
+            <Text style={styles.title}>Đăng ký</Text>
 
             <TextInput
               label="Họ và tên"
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 24,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     justifyContent: 'center',
   },
   title: {

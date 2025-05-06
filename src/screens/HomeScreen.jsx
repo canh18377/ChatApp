@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Avatar } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchConversations } from '../redux/api/conversationApi';
 import { ChatSkeletonItem } from '../screens';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SearchBox from '../components/SearchBox';
 import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
 import debounce from 'lodash.debounce';
@@ -37,6 +37,7 @@ const ChatListScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (me) {
+      console.log('me', me);
       const socket = getSocket();
       socket.emit('register', me.idUser);
 
@@ -80,42 +81,49 @@ const ChatListScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Search Box */}
-      <View style={styles.searchWrapper}>
-        <Icon name="search" size={24} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search messages..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={handleSearch}
-          onFocus={() => setIsSearching(true)}
-        />
-      </View>
-
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Messages</Text>
-      </View>
-
+      <SearchBox
+        value={searchQuery}
+        onChangeText={handleSearch}
+        onFocus={() => setIsSearching(true)}
+        placeholder="Tìm kiếm người dùng..."
+      />
       {isSearching ? (
         searchResults.length > 0 ? (
           <FlatList
             data={searchResults}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.messageItem}
-                onPress={() => {
-                  setIsSearching(false);
-                  setSearchQuery('');
-                  navigation.navigate('ChatDetailScreen', { user: item, isGroup: false });
-                }}
-              >
-                <Avatar.Icon size={40} icon="account" />
-                <View style={styles.messageContent}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.messageText}>Nhấn để trò chuyện</Text>
-                </View>
-              </TouchableOpacity>
+              <View style={styles.messageItem}>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+                  onPress={() => {
+                    setIsSearching(false);
+                    setSearchQuery('');
+                    navigation.navigate('ChatDetailScreen', { user: item, isGroup: false });
+                  }}
+                >
+                  {item.avatar ? (
+                    <Avatar.Image size={40} source={{ uri: item.avatar }} />
+                  ) : (
+                    <Avatar.Icon size={40} icon="account" style={styles.avatarText} />
+                  )}
+                  <View style={styles.messageContent}>
+                    <Text style={styles.name}>{item.name}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {!item.isFriend && (
+                  <TouchableOpacity
+                    style={styles.addFriendButton}
+                    onPress={() => {
+                      // Gọi API gửi lời mời kết bạn ở đây nếu có
+                      console.log('Send friend request to:', item._id);
+                    }}
+                  >
+                    <Text style={styles.addFriendButtonText}>Kết bạn</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
           />
         ) : (
@@ -202,8 +210,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  headerText: { fontSize: 18, fontWeight: 'bold' },
   countText: { fontSize: 16, color: '#4A90E2', marginLeft: 5 },
   messageItem: {
     flexDirection: 'row',
@@ -219,4 +225,14 @@ const styles = StyleSheet.create({
   time: { fontSize: 14, color: '#999' },
   badge: { backgroundColor: '#007AFF', color: '#fff', marginTop: 5 },
   avatarText: { backgroundColor: '#4A90E2' },
+  addFriendButton: {
+    backgroundColor: '#4A90E2',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  addFriendButtonText: {
+    color: '#fff',
+    fontSize: 14,
+  },
 });
