@@ -1,32 +1,35 @@
-// src/screens/FriendsScreen.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Avatar, Button } from 'react-native-paper';
-
-const friendsList = [
-  { id: "1", name: "Draco", avatar: "https://example.com/draco.jpg", lastMessage: "Vient de débloquer le succès Touriste." },
-  { id: "2", name: "Hermione", avatar: "https://example.com/hermione.jpg", lastMessage: "A créé la quête Boulogne centre." },
-  { id: "3", name: "Ron", avatar: "https://example.com/ron.jpg", lastMessage: "A créé la quête Secrets du Quartier Latin." },
-];
-
-const sentRequests = [
-  { id: "4", name: "Ginny", avatar: "https://example.com/ginny.jpg" },
-  { id: "5", name: "Luna", avatar: "https://example.com/luna.jpg" },
-];
-
-const receivedRequests = [
-  { id: "6", name: "Neville", avatar: "https://example.com/neville.jpg" },
-];
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  fetchFriendList,
+  fetchSentRequests,
+  fetchReceivedRequests,
+  acceptFriendRequest,
+  rejectFriendRequest
+} from '../redux/api/friendApi';
 
 const FriendsScreen = () => {
-  const [activeTab, setActiveTab] = useState('Danh sách'); // Tab hiện tại: 'Danh sách', 'Đã gửi', 'Đã nhận'
+  const [activeTab, setActiveTab] = useState('Danh sách');
+  const dispatch = useDispatch();
+  const { friends, sentRequests, receivedRequests, loading } = useSelector(
+    (state) => state.friendReducer
+  );
+
+  console.log(receivedRequests)
+  useEffect(() => {
+    dispatch(fetchFriendList());
+    dispatch(fetchSentRequests());
+    dispatch(fetchReceivedRequests());
+  }, [dispatch]);
 
   const renderFriendItem = ({ item }) => (
     <View style={styles.friendItem}>
       {item.avatar ? (
         <Avatar.Image size={50} source={{ uri: item.avatar }} style={styles.avatar} />
       ) : (
-        <Avatar.Text size={50} label={item.name.charAt(0)} style={styles.avatar} />
+        <Avatar.Text size={50} style={styles.avatar} />
       )}
       <View style={styles.friendInfo}>
         <Text style={styles.friendName}>{item.name}</Text>
@@ -35,79 +38,77 @@ const FriendsScreen = () => {
     </View>
   );
 
-  const renderSentRequestItem = ({ item }) => (
-    <View style={styles.requestItem}>
-      {item.avatar ? (
-        <Avatar.Image size={50} source={{ uri: item.avatar }} style={styles.avatar} />
-      ) : (
-        <Avatar.Text size={50} label={item.name.charAt(0)} style={styles.avatar} />
-      )}
-      <Text style={styles.requestName}>{item.name}</Text>
-    </View>
-  );
-
-  const renderReceivedRequestItem = ({ item }) => (
-    <View style={styles.requestItem}>
-      {item.avatar ? (
-        <Avatar.Image size={50} source={{ uri: item.avatar }} style={styles.avatar} />
-      ) : (
-        <Avatar.Text size={50} label={item.name.charAt(0)} style={styles.avatar} />
-      )}
-      <Text style={styles.requestName}>{item.name}</Text>
-      <View style={styles.requestActions}>
-        <Button
-          mode="contained"
-          onPress={() => console.log(`Chấp nhận lời mời từ ${item.name}`)}
-          style={styles.acceptButton}
-          labelStyle={styles.buttonLabel}
-        >
-          Chấp nhận
-        </Button>
-        <Button
-          mode="outlined"
-          onPress={() => console.log(`Từ chối lời mời từ ${item.name}`)}
-          style={styles.declineButton}
-          labelStyle={styles.buttonLabel}
-        >
-          Từ chối
-        </Button>
+  const renderSentRequestItem = ({ item }) => {
+    const recipient = item.recipient; // Lấy thông tin người nhận từ "recipient"
+    return (
+      <View style={styles.requestItem}>
+        {recipient.avatar ? (
+          <Avatar.Image size={50} source={{ uri: recipient.avatar }} style={styles.avatar} />
+        ) : (
+          <Avatar.Text size={50} style={styles.avatar} />
+        )}
+        <Text style={styles.requestName}>{recipient.name}</Text>
       </View>
-    </View>
-  );
+    );
+  };
+
+  const renderReceivedRequestItem = ({ item }) => {
+    const requester = item.requester; // Lấy thông tin người nhận từ "requester"
+    return (
+      <View style={styles.requestItem}>
+        {requester.avatar ? (
+          <Avatar.Image size={50} source={{ uri: requester.avatar }} style={styles.avatar} />
+        ) : (
+          <Avatar.Text size={50} style={styles.avatar} />
+        )}
+        <Text style={styles.requestName}>{requester.name}</Text>
+        <View style={styles.requestActions}>
+          <Button
+            mode="contained"
+            onPress={() => dispatch(acceptFriendRequest(item._id))}
+            style={styles.acceptButton}
+            labelStyle={styles.buttonLabel}
+          >
+            Chấp nhận
+          </Button>
+          <Button
+            mode="outlined"
+            onPress={() => dispatch(rejectFriendRequest(item._id))}
+            style={styles.declineButton}
+            labelStyle={styles.buttonLabel}
+          >
+            Từ chối
+          </Button>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <Text style={styles.headerText}>Bạn bè</Text>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'Danh sách' && styles.activeTab]}
-          onPress={() => setActiveTab('Danh sách')}
-        >
-          <Text style={[styles.tabText, activeTab === 'Danh sách' && styles.activeTabText]}>Danh sách</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'Đã gửi' && styles.activeTab]}
-          onPress={() => setActiveTab('Đã gửi')}
-        >
-          <Text style={[styles.tabText, activeTab === 'Đã gửi' && styles.activeTabText]}>Đã gửi</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'Đã nhận' && styles.activeTab]}
-          onPress={() => setActiveTab('Đã nhận')}
-        >
-          <Text style={[styles.tabText, activeTab === 'Đã nhận' && styles.activeTabText]}>Đã nhận</Text>
-        </TouchableOpacity>
+        {['Danh sách', 'Đã gửi', 'Đã nhận'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+            onPress={() => setActiveTab(tab)}
+          >
+            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* Nội dung của tab */}
+      {/* Content */}
       {activeTab === 'Danh sách' && (
         <FlatList
-          data={friendsList}
+          data={friends}
           renderItem={renderFriendItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id || item.id}
           ListEmptyComponent={<Text style={styles.emptyText}>Chưa có bạn bè</Text>}
         />
       )}
@@ -115,7 +116,7 @@ const FriendsScreen = () => {
         <FlatList
           data={sentRequests}
           renderItem={renderSentRequestItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id || item.id}
           ListEmptyComponent={<Text style={styles.emptyText}>Chưa gửi lời mời nào</Text>}
         />
       )}
@@ -123,7 +124,7 @@ const FriendsScreen = () => {
         <FlatList
           data={receivedRequests}
           renderItem={renderReceivedRequestItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id || item.id}
           ListEmptyComponent={<Text style={styles.emptyText}>Chưa nhận được lời mời nào</Text>}
         />
       )}
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   avatar: {
-    backgroundColor: '#007AFF', 
+    backgroundColor: '#007AFF',
   },
   friendInfo: {
     flex: 1,

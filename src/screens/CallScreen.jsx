@@ -15,7 +15,6 @@ const AudioCallScreen = ({ navigation, route }) => {
     const receiverAvatar = route.params.tokenCall.receiverAvatar;
     const callerName = route.params.tokenCall.callerName;
     const callerAvatar = route.params.tokenCall.callerAvatar;
-    console.log(route.params)
     const [engine, setEngine] = useState(null);
     const [callStatus, setCallStatus] = useState('waiting'); // 'waiting' | 'inCall' | 'ended'
     const [remoteJoined, setRemoteJoined] = useState(false);
