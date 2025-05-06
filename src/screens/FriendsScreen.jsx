@@ -16,38 +16,40 @@ const FriendsScreen = () => {
   const { friends, sentRequests, receivedRequests, loading } = useSelector(
     (state) => state.friendReducer
   );
-
-  console.log(receivedRequests)
+  const me = useSelector((state) => state.userReducer.me);
+  console.log(me)
+  console.log(friends)
   useEffect(() => {
     dispatch(fetchFriendList());
     dispatch(fetchSentRequests());
     dispatch(fetchReceivedRequests());
   }, [dispatch]);
 
-  const renderFriendItem = ({ item }) => (
-    <View style={styles.friendItem}>
-      {item.avatar ? (
-        <Avatar.Image size={50} source={{ uri: item.avatar }} style={styles.avatar} />
+  const renderFriendItem = ({ item }) => {
+    const friend = me?.idUser !== item.requester ? item.requester : item.recipient
+    return <View style={styles.friendItem}>
+      {friend.avatar ? (
+        <Avatar.Image size={50} source={{ uri: friend.avatar }} style={styles.avatar} />
       ) : (
         <Avatar.Text size={50} style={styles.avatar} />
       )}
       <View style={styles.friendInfo}>
-        <Text style={styles.friendName}>{item.name}</Text>
-        {item.lastMessage && <Text style={styles.lastMessage}>{item.lastMessage}</Text>}
+        <Text style={styles.friendName}>{friend.name}</Text>
+        {friend.lastMessage && <Text style={styles.lastMessage}>{friend.lastMessage}</Text>}
       </View>
     </View>
-  );
+  };
 
   const renderSentRequestItem = ({ item }) => {
     const recipient = item.recipient; // Lấy thông tin người nhận từ "recipient"
     return (
       <View style={styles.requestItem}>
-        {recipient.avatar ? (
-          <Avatar.Image size={50} source={{ uri: recipient.avatar }} style={styles.avatar} />
+        {recipient?.avatar ? (
+          <Avatar.Image size={50} source={{ uri: recipient?.avatar }} style={styles.avatar} />
         ) : (
-          <Avatar.Text size={50} style={styles.avatar} />
+          <Avatar.Text size={50} style={styles?.avatar} />
         )}
-        <Text style={styles.requestName}>{recipient.name}</Text>
+        <Text style={styles.requestName}>{recipient?.name}</Text>
       </View>
     );
   };
@@ -116,7 +118,7 @@ const FriendsScreen = () => {
         <FlatList
           data={sentRequests}
           renderItem={renderSentRequestItem}
-          keyExtractor={(item) => item._id || item.id}
+          keyExtractor={(item) => item._id || Math.random()}
           ListEmptyComponent={<Text style={styles.emptyText}>Chưa gửi lời mời nào</Text>}
         />
       )}

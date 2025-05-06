@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Avatar } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
 import debounce from 'lodash.debounce';
+import { sendFriendRequest } from '../redux/api/friendApi';
 
 connectSocket();
 
@@ -28,7 +29,10 @@ const ChatListScreen = ({ navigation }) => {
   if (token) {
     AsyncStorage.setItem('userToken', token);
   }
-
+  console.log(searchResults)
+  const handleAddFriend = (user) => {
+    dispatch(sendFriendRequest(user.idUser))
+  };
   useEffect(() => {
     dispatch(getCurrentMe());
     dispatch(fetchConversations());
@@ -110,14 +114,31 @@ const ChatListScreen = ({ navigation }) => {
                   navigation.navigate('ChatDetailScreen', { user: item, isGroup: false });
                 }}
               >
-                <Avatar.Icon size={40} icon="account" />
+                {item.avatar ? (
+                  <Image
+                    source={{ uri: item.avatar }}
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
+                  />
+                ) : (
+                  <Avatar.Icon size={40} icon="account" />
+                )}
                 <View style={styles.messageContent}>
                   <Text style={styles.name}>{item.name}</Text>
                   <Text style={styles.messageText}>Nhấn để trò chuyện</Text>
                 </View>
+
+                {!item.isFriend && (
+                  <TouchableOpacity
+                    style={styles.addFriendButton}
+                    onPress={() => handleAddFriend(item)}
+                  >
+                    <Text style={styles.addFriendText}>Kết bạn</Text>
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
             )}
           />
+
         ) : (
           <View style={{ alignItems: 'center', marginTop: 30 }}>
             <Text style={{ color: '#999', fontSize: 16 }}>Không tìm thấy người dùng nào</Text>
@@ -168,10 +189,13 @@ const ChatListScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.rightSection}>
                   <Text style={styles.time}>
-                    {new Date(lastMessage?.timestamp).toLocaleTimeString('vi-VN', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {lastMessage?.timestamp
+                      ? new Date(lastMessage.timestamp).toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                      : ''}
+
                   </Text>
                 </View>
               </TouchableOpacity>

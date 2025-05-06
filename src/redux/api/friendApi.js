@@ -4,9 +4,9 @@ import axios from '../../service/axios';
 // Gửi lời mời kết bạn
 export const sendFriendRequest = createAsyncThunk(
     'friend/sendFriendRequest',
-    async (friendId, { rejectWithValue }) => {
+    async (recipientId, { rejectWithValue }) => {
         try {
-            const response = await axios.post('/friend/send-request', friendId);
+            const response = await axios.post('/friend/send-request', { recipientId });
             return response.data;
         } catch (error) {
             console.error('Send friend request failed:', error.response?.data || error.message);

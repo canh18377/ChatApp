@@ -27,7 +27,8 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchMessages(conversationId));
+    const data = conversationId ? { conversationId: conversationId, exist: true } : { participants: [user.idUser], exist: false }
+    dispatch(fetchMessages(data));
     dispatch(getCurrentMe())
     const handleReceiveMessage = (newMessage) => {
       console.log(newMessage)
