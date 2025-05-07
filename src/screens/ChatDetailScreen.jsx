@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+
 import {
   View,
   Text,
@@ -12,19 +13,19 @@ import {
 } from 'react-native';
 import { Avatar, IconButton } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
-import EmojiSelector from 'react-native-emoji-selector';
 import { fetchMessages } from '../redux/api/messageApi';
 import { getCurrentMe } from '../redux/api/userApi';
 import { useSelector, useDispatch } from 'react-redux';
+import EmojiPicker from '../components/EmojiPicker';
 import { getSocket } from '../service/socket';
 const ChatDetailScreen = ({ navigation, route }) => {
-  const { user, conversationId, isGroup } = route.params || {};
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const dispatch = useDispatch();
+  const [input, setInput] = useState('');
   const messages = useSelector((state) => state.messageReducer.messages);
   const [localMessage, setLocalMessage] = useState(messages);
   const me = useSelector((state) => state.userReducer.me);
-  const [input, setInput] = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const { user, conversationId, isGroup } = route.params || {};
 
   useEffect(() => {
     dispatch(fetchMessages(conversationId));
@@ -67,15 +68,38 @@ const ChatDetailScreen = ({ navigation, route }) => {
   };
 
   const sendImage = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
-    });
+    const result = await launchImageLibrary({ mediaType: 'photo', selectionLimit: 1 });
 
     if (result.assets && result.assets.length > 0) {
-      const imageUri = result.assets[0].uri;
-      // eslint-disable-next-line no-undef
-      socket.emit('send_image', { conversationId, sender: user.id, imageUri });
+      const image = result.assets[0];
+      const formData = new FormData();
+      formData.append('image', {
+        uri: image.uri,
+        name: image.fileName || 'photo.jpg',
+        type: image.type || 'image/jpeg',
+      });
+
+      try {
+        const res = await fetch('https://backend-chat-app-4.onrender.com/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'multipart/form-data' },
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (data?.imageUrl) {
+          const socket = getSocket();
+          socket.emit('send_image', {
+            senderId: me.idUser,
+            receiverId: user.idUser,
+            conversationId,
+            image: data.imageUrl,
+          });
+        }
+      } catch (err) {
+        console.error('Upload failed:', err);
+      }
     }
   };
 
@@ -142,10 +166,11 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
         {/* Emoji Picker */}
         {showEmojiPicker && (
-          <EmojiSelector
-            onEmojiSelected={(emoji) => setInput((prev) => prev + emoji)}
-            showSearchBar={false}
-            showTabs={true}
+          <EmojiPicker
+            onEmojiSelected={(emoji) => {
+              setInput((prev) => prev + emoji);
+            }}
+            onClose={() => setShowEmojiPicker(false)}
           />
         )}
 
