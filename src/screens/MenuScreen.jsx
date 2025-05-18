@@ -23,12 +23,19 @@ const MenuScreen = ({ navigation }) => {
       },
     ]);
   };
-
+  console.log(me)
   return (
     <View style={styles.container}>
       {/* Thông tin người dùng */}
       <View style={styles.profileContainer}>
-        <Image source={me?.avatar} />
+        {me.avatar ? (
+          <Image
+            source={{ uri: me.avatar }}
+            style={{ width: 70, height: 70, borderRadius: 50 }} // 👈 bo góc cho avatar tròn
+          />
+        ) : (
+          <Avatar.Icon size={50} icon="account" />
+        )}
         <Text style={styles.name}>{me?.name}</Text>
       </View>
 

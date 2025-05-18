@@ -25,14 +25,26 @@ const ChatListScreen = ({ navigation }) => {
   const me = useSelector((state) => state.userReducer.me);
   const token = useSelector((state) => state.authReducer.token);
   const searchResults = useSelector((state) => state.userReducer.searchResults);
-
+  const [localsearchResults, setLocalsearchResults] = useState(searchResults || [])
   if (token) {
     AsyncStorage.setItem('userToken', token);
   }
   console.log(searchResults)
   const handleAddFriend = (user) => {
     dispatch(sendFriendRequest(user.idUser))
+    setLocalsearchResults(prev => prev.map(element => {
+      if (element.idUser === user.idUser) {
+        return {
+          ...element, isFriend: true
+        }
+      } else return element
+    }))
   };
+  useEffect(() => {
+    if (searchResults.length) {
+      setLocalsearchResults(searchResults)
+    }
+  }, [searchResults])
   useEffect(() => {
     dispatch(getCurrentMe());
     dispatch(fetchConversations());
@@ -62,8 +74,6 @@ const ChatListScreen = ({ navigation }) => {
     }
   }, [tokenCall, navigation]);
 
-  // debounce tìm kiếm người dùng
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
     debounce((text) => {
       if (text.trim() === '') {
@@ -101,9 +111,9 @@ const ChatListScreen = ({ navigation }) => {
       </View>
 
       {isSearching ? (
-        searchResults.length > 0 ? (
+        localsearchResults.length > 0 ? (
           <FlatList
-            data={searchResults}
+            data={localsearchResults}
             keyExtractor={(item) => item._id}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -211,6 +221,17 @@ export default ChatListScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  addFriendText: {
+    backgroundColor: "green",
+    color: "white",
+    paddingVertical: 5,      // chiều cao trong
+    paddingHorizontal: 15,    // chiều ngang trong
+    borderRadius: 8,          // bo góc mượt hơn
+    textAlign: "center",      // căn giữa chữ
+    fontWeight: "600",        // chữ đậm
+    fontSize: 16,             // cỡ chữ phù hợp
+  },
+
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',

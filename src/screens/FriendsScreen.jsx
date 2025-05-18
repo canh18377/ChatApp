@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Avatar, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,17 +14,18 @@ import {
 const FriendsScreen = () => {
   const [activeTab, setActiveTab] = useState('Danh sách');
   const dispatch = useDispatch();
-  const { friends, sentRequests, receivedRequests, loading } = useSelector(
+  const { friends, sentRequests, receivedRequests, loading, loadingReject, loadingAccept } = useSelector(
     (state) => state.friendReducer
   );
+  const [selected, setSelected] = useState()
   const me = useSelector((state) => state.userReducer.me);
-  console.log(me)
-  console.log(friends)
-  useEffect(() => {
-    dispatch(fetchFriendList());
-    dispatch(fetchSentRequests());
-    dispatch(fetchReceivedRequests());
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchFriendList());
+      dispatch(fetchSentRequests());
+      dispatch(fetchReceivedRequests());
+    }, [])
+  )
 
   const renderFriendItem = ({ item }) => {
     const friend = me?.idUser !== item.requester ? item.requester : item.recipient
@@ -31,7 +33,7 @@ const FriendsScreen = () => {
       {friend.avatar ? (
         <Avatar.Image size={50} source={{ uri: friend.avatar }} style={styles.avatar} />
       ) : (
-        <Avatar.Text size={50} style={styles.avatar} />
+        <Avatar.Icon size={50} name="account" />
       )}
       <View style={styles.friendInfo}>
         <Text style={styles.friendName}>{friend.name}</Text>
@@ -47,7 +49,7 @@ const FriendsScreen = () => {
         {recipient?.avatar ? (
           <Avatar.Image size={50} source={{ uri: recipient?.avatar }} style={styles.avatar} />
         ) : (
-          <Avatar.Text size={50} style={styles?.avatar} />
+          <Avatar.Icon size={40} icon="account" />
         )}
         <Text style={styles.requestName}>{recipient?.name}</Text>
       </View>
@@ -61,23 +63,31 @@ const FriendsScreen = () => {
         {requester.avatar ? (
           <Avatar.Image size={50} source={{ uri: requester.avatar }} style={styles.avatar} />
         ) : (
-          <Avatar.Text size={50} style={styles.avatar} />
+          <Avatar.Icon size={40} icon="account" />
         )}
         <Text style={styles.requestName}>{requester.name}</Text>
         <View style={styles.requestActions}>
           <Button
             mode="contained"
-            onPress={() => dispatch(acceptFriendRequest(item._id))}
+            onPress={() => {
+              setSelected(item._id)
+              dispatch(acceptFriendRequest(item._id))
+            }}
             style={styles.acceptButton}
             labelStyle={styles.buttonLabel}
+            loading={loadingAccept && selected === item._id}
           >
             Chấp nhận
           </Button>
           <Button
             mode="outlined"
-            onPress={() => dispatch(rejectFriendRequest(item._id))}
+            onPress={() => {
+              setSelected(item._id)
+              dispatch(rejectFriendRequest(item._id))
+            }}
             style={styles.declineButton}
             labelStyle={styles.buttonLabel}
+            loading={loadingReject && selected === item._id}
           >
             Từ chối
           </Button>
@@ -89,14 +99,18 @@ const FriendsScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.headerText}>Bạn bè</Text>
-
       {/* Tabs */}
       <View style={styles.tabContainer}>
         {['Danh sách', 'Đã gửi', 'Đã nhận'].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => setActiveTab(tab)}
+            onPress={() => {
+              if (tab === 'Danh sách') {
+                dispatch(fetchFriendList())
+              } setActiveTab(tab)
+            }
+            }
           >
             <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
               {tab}

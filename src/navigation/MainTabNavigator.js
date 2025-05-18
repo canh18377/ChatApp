@@ -28,6 +28,7 @@ const MainTabNavigator = () => {
         name="FriendsScreen"
         component={FriendsScreen}
         options={{
+          unmountOnBlur: true,
           tabBarLabel: 'Bạn bè',
           tabBarIcon: ({ color, size }) => <Icon name="account-group" color={color} size={size} />,
         }}

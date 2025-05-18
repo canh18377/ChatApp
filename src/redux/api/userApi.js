@@ -30,3 +30,19 @@ export const searchUsers = createAsyncThunk(
     }
   },
 );
+
+export const updateUser = createAsyncThunk(
+  'user/updateUser',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.put('/user/update', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Lỗi khi tìm kiếm người dùng');
+    }
+  },
+);

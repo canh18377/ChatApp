@@ -2,32 +2,37 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Avatar, Button, IconButton } from 'react-native-paper';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUser } from '../redux/api/userApi';
 const MyProfileScreen = ({ navigation }) => {
-  const [name, setName] = useState('Nguyễn Văn A');
-  const [gender, setGender] = useState('Nam');
-  const [dob, setDob] = useState('01/01/2000');
-  const [avatarUri, setAvatarUri] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [newName, setNewName] = useState(name);
-  const [newGender, setNewGender] = useState(gender);
-  const [newDob, setNewDob] = useState(dob);
   const me = useSelector((state) => state.userReducer.me);
-
+  const [email, setEmail] = useState(me?.email);
+  const [newName, setNewName] = useState(me.name)
+  const [modalVisible, setModalVisible] = useState(false);
+  const dispatch = useDispatch()
   const pickImage = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
       if (!response.didCancel && !response.errorCode) {
-        const uri = response.assets[0].uri;
-        setAvatarUri(uri);
+        const asset = response.assets[0];
+        const form = new FormData()
+        form.append("name", newName)
+        form.append("email", email)
+        form.append("avatar", {
+          uri: Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri,
+          name: asset.fileName || 'photo.jpg',
+          type: asset.type || 'image/jpeg',
+        });
+        dispatch(updateUser(form))
       }
     });
   };
 
   const updateProfile = () => {
-    setName(newName);
-    setGender(newGender);
-    setDob(newDob);
-    setModalVisible(false);
+    setModalVisible(false)
+    const form = new FormData()
+    form.append("name", newName)
+    form.append("email", email)
+    dispatch(updateUser(form))
   };
 
   return (
@@ -41,8 +46,8 @@ const MyProfileScreen = ({ navigation }) => {
       />
       <View style={styles.avatarContainer}>
         <TouchableOpacity onPress={pickImage}>
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+          {me ? (
+            <Image source={{ uri: me.avatar }} style={styles.avatar} />
           ) : (
             <Avatar.Icon size={100} icon="account" />
           )}
@@ -51,13 +56,13 @@ const MyProfileScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.name}>{me.name}</Text>
         <IconButton icon="pencil" size={20} onPress={() => setModalVisible(true)} />
       </View>
-
-      <Text style={styles.label}>Giới tính: {gender}</Text>
-      <Text style={styles.label}>Ngày sinh: {dob}</Text>
-
+      <View style={{ flexDirection: "row", alignContent: "center" }}>
+        <Text style={{ fontWeight: "bold", fontSize: 20, marginTop: 7 }}>Email:</Text>
+        <Text style={styles.label}> {me?.email || "Bạn chưa có thông tin về email"}</Text>
+      </View>
       <Button mode="contained" style={styles.button} onPress={() => setModalVisible(true)}>
         Cập nhật
       </Button>
@@ -79,15 +84,9 @@ const MyProfileScreen = ({ navigation }) => {
               style={styles.input}
             />
             <TextInput
-              value={newGender}
-              onChangeText={setNewGender}
-              placeholder="Giới tính"
-              style={styles.input}
-            />
-            <TextInput
-              value={newDob}
-              onChangeText={setNewDob}
-              placeholder="Ngày sinh"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
               style={styles.input}
             />
             <Button mode="contained" onPress={updateProfile}>

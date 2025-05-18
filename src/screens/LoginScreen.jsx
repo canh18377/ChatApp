@@ -6,7 +6,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SuccessModal from '../components/Modals/SuccessModal';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchRegister, fetchLogin } from '../redux/api/authApi'
-const baseURL = process.env.REACT_NATIVE_APP_API_BASE_URL
 
 const LoginScreen = ({ navigation }) => {
   const theme = useTheme();

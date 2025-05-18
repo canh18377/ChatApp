@@ -10,3 +10,16 @@ export const fetchMessages = createAsyncThunk('message/fetchMessages', async (da
         throw new Error(error.message || 'Lỗi không xác định');
     }
 });
+
+export const saveImage = createAsyncThunk('message/saveImage', async (formData) => {
+    try {
+        const response = await axios.post(`/message/saveImg`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.message || 'Lỗi không xác định');
+    }
+});

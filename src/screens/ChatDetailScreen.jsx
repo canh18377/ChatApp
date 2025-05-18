@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { Avatar, IconButton } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
-import EmojiSelector from 'react-native-emoji-selector';
-import { fetchMessages } from '../redux/api/messageApi';
+import { Picker } from 'emoji-mart-native';
+import { fetchMessages, saveImage } from '../redux/api/messageApi';
 import { getCurrentMe } from '../redux/api/userApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSocket } from '../service/socket';
@@ -24,14 +24,12 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const [localMessage, setLocalMessage] = useState(messages)
   const me = useSelector((state) => state.userReducer.me);
   const [input, setInput] = useState('');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-
+  const [showPicker, setShowPicker] = useState(false);
   useEffect(() => {
-    const data = conversationId ? { conversationId: conversationId, exist: true } : { participants: [user.idUser], exist: false }
+    const data = conversationId ? { conversationId: conversationId, exist: true } : { participants: [user.idUser, me.idUser], exist: false }
     dispatch(fetchMessages(data));
     dispatch(getCurrentMe())
     const handleReceiveMessage = (newMessage) => {
-      console.log(newMessage)
       setLocalMessage((prevMessages) => {
         const updatedMessages = [...prevMessages, newMessage];
         updatedMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -58,30 +56,55 @@ const ChatDetailScreen = ({ navigation, route }) => {
     if (input.trim() && socket) {
       socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input });
       setInput('');
-      setShowEmojiPicker(false);
+      setShowPicker(false);
     }
   };
+  const sendImage = () => {
+    launchImageLibrary({ mediaType: 'photo' }, async (response) => {
+      if (!response.didCancel && !response.errorCode && response.assets?.length > 0) {
+        const asset = response.assets[0];
 
-  const sendImage = async () => {
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
+        const form = new FormData();
+        form.append("image", {
+          uri: Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri,
+          name: asset.fileName || 'photo.jpg',
+          type: asset.type || 'image/jpeg',
+        });
+
+        try {
+          const imageUrl = await dispatch(saveImage(form)).unwrap();
+          const socket = getSocket();
+          if (socket) {
+            socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: imageUrl });
+            setShowPicker(false);
+          }
+
+        } catch (err) {
+          console.error("Upload image error:", err);
+        }
+      }
     });
-
-    if (result.assets && result.assets.length > 0) {
-      const imageUri = result.assets[0].uri;
-      socket.emit('send_image', { conversationId, sender: user.id, imageUri });
-    }
   };
+  const isValidUrl = (str) => {
+    const pattern = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
+    return pattern.test(str);
+  };
+
 
   const renderMessage = ({ item }) => {
-    return (
-      <View style={[styles.messageContainer, item.sender === me?.idUser ? styles.sent : styles.received]}>
-        {item.content && <Text style={styles.messageText}>{item.content}</Text>}
-        {item.image && <Image source={{ uri: item.image }} style={styles.imageMessage} />}
-      </View>
-    );
-  }
+    const isImage = isValidUrl(item.content);
+    return <View style={[
+      styles.messageContainer,
+      item.sender === me?.idUser ? styles.sent : styles.received,
+      isImage && { backgroundColor: 'transparent', padding: 0 }
+    ]}>
+      {isValidUrl(item.content) ? (
+        <Image source={{ uri: item.content }} style={styles.imageMessage} />
+      ) : (
+        <Text style={styles.messageText}>{item.content}</Text>
+      )}
+    </View>
+  };
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
       <View style={{ flex: 1, height: '100%', position: 'relative' }}>
@@ -118,20 +141,20 @@ const ChatDetailScreen = ({ navigation, route }) => {
           contentContainerStyle={styles.messagesList}
           inverted
         />
-
         {/* Emoji Picker */}
-        {showEmojiPicker && (
-          <EmojiSelector
-            onEmojiSelected={(emoji) => setInput((prev) => prev + emoji)}
-            showSearchBar={false}
-            showTabs={true}
-          />
-        )}
+        {showPicker && (
+          <Picker
+            onSelect={emoji => setInput(prev => prev + emoji.native)}
+            showPreview={false}
+            showSkinTones={false}
+            style={{ height: 250 }}
+          />)
+        }
 
         {/* Input Box */}
         <View style={styles.inputContainer}>
           <IconButton icon="camera" size={24} onPress={sendImage} />
-          <IconButton icon="emoticon-outline" size={24} onPress={() => setShowEmojiPicker(!showEmojiPicker)} />
+          <IconButton icon="emoticon-outline" size={24} onPress={() => setShowPicker(prev => !prev)} />
           <TextInput
             style={styles.input}
             value={input}
@@ -185,6 +208,7 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 10,
     marginTop: 5,
+    backgroundColor: ""
   },
   inputContainer: {
     position: "static",

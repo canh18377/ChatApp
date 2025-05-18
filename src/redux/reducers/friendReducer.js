@@ -14,6 +14,8 @@ const initialState = {
     receivedRequests: [],
     loading: false,
     error: null,
+    loadingReject: false,
+    loadingAccept: false
 };
 
 const friendSlice = createSlice({
@@ -37,34 +39,32 @@ const friendSlice = createSlice({
 
             // --- Chấp nhận lời mời ---
             .addCase(acceptFriendRequest.pending, (state) => {
-                state.loading = true;
+                state.loadingAccept = true;
             })
             .addCase(acceptFriendRequest.fulfilled, (state, action) => {
-                state.loading = false;
-                // Xoá khỏi danh sách đã nhận
+                state.loadingAccept = false;
+                console.log(action.payload)
                 state.receivedRequests = state.receivedRequests.filter(
                     (req) => req._id !== action.payload._id
                 );
-                // Thêm vào danh sách bạn bè
-                state.friends.push(action.payload.friend);
             })
             .addCase(acceptFriendRequest.rejected, (state, action) => {
-                state.loading = false;
+                state.loadingAccept = false;
                 state.error = action.payload;
             })
 
             // --- Từ chối lời mời ---
             .addCase(rejectFriendRequest.pending, (state) => {
-                state.loading = true;
+                state.loadingReject = true;
             })
             .addCase(rejectFriendRequest.fulfilled, (state, action) => {
-                state.loading = false;
+                state.loadingReject = false;
                 state.receivedRequests = state.receivedRequests.filter(
-                    (req) => req._id !== action.payload._id
+                    (req) => req.idUser !== action.payload.idUser
                 );
             })
             .addCase(rejectFriendRequest.rejected, (state, action) => {
-                state.loading = false;
+                state.loadingReject = false;
                 state.error = action.payload;
             })
 
