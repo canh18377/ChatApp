@@ -21,6 +21,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const { user, conversationId, isGroup } = route.params || {};
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.messageReducer.messages);
+  const loading = useSelector((state) => state.messageReducer.loading);
   const [localMessage, setLocalMessage] = useState(messages)
   const me = useSelector((state) => state.userReducer.me);
   const [input, setInput] = useState('');
@@ -162,7 +163,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
             placeholder="Type message..."
           />
           <TouchableOpacity onPress={sendMessage}>
-            <IconButton icon="send" size={24} color="#E91E63" />
+            <IconButton loading={loading} icon="send" size={24} color="#E91E63" />
           </TouchableOpacity>
         </View>
       </View>

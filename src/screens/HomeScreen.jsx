@@ -70,7 +70,7 @@ const ChatListScreen = ({ navigation }) => {
 
   useEffect(() => {
     if (tokenCall) {
-      navigation.navigate('CallScreen', { tokenCall });
+      navigation.navigate('CallScreenAudio', { tokenCall });
     }
   }, [tokenCall, navigation]);
 

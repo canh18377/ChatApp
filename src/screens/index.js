@@ -8,7 +8,7 @@ import RegisterScreen from './RegisterScreen';
 import SplashScreen from './SplashScreen';
 import ChatSkeletonItem from '../components/ChatSkeletonItem';
 import FriendsScreen from './FriendsScreen';
-import CallScreen from './CallScreen';
+import CallScreenAudio from './CallScreenAudio';
 export {
   SplashScreen,
   HomeScreen,
@@ -20,5 +20,5 @@ export {
   RegisterScreen,
   ChatSkeletonItem,
   FriendsScreen,
-  CallScreen
+  CallScreenAudio,
 };
