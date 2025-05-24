@@ -194,7 +194,7 @@ const ChatListScreen = ({ navigation }) => {
                 <View style={styles.messageContent}>
                   <Text style={styles.name}>{user.name}</Text>
                   <Text style={styles.messageText} numberOfLines={1} ellipsizeMode="tail">
-                    {lastMessage?.content || 'Chưa có tin nhắn'}
+                    {lastMessage?.content || 'Tin nhắn đã được thu hồi'}
                   </Text>
                 </View>
                 <View style={styles.rightSection}>

@@ -9,7 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Pressable
 } from 'react-native';
+import RecalledMessage from '../components/ui/RecalledMessage';
 import { Avatar, IconButton } from 'react-native-paper';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Picker } from 'emoji-mart-native';
@@ -18,6 +20,7 @@ import { getCurrentMe } from '../redux/api/userApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSocket } from '../service/socket';
 const ChatDetailScreen = ({ navigation, route }) => {
+  let socket = null
   const { user, conversationId, isGroup } = route.params || {};
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.messageReducer.messages);
@@ -26,6 +29,10 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const me = useSelector((state) => state.userReducer.me);
   const [input, setInput] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(false)
+  const [openInputUpdateMes, setOpenInputUpdateMes] = useState(false)
+  const [updateMessage, setUpdateMessage] = useState("")
+
   useEffect(() => {
     const data = conversationId ? { conversationId: conversationId, exist: true } : { participants: [user.idUser, me.idUser], exist: false }
     dispatch(fetchMessages(data));
@@ -37,9 +44,22 @@ const ChatDetailScreen = ({ navigation, route }) => {
         return updatedMessages;
       });
     };
-    const socket = getSocket()
+    const handleChangeMessage = (newMessage) => {
+      setLocalMessage(prev => {
+        return prev.map(mes => {
+          if (mes._id === newMessage._id) return newMessage
+          else return mes
+        })
+      })
+    }
+    if (!socket) {
+      socket = getSocket()
+    }
     if (socket) {
       socket.on('receive_message', handleReceiveMessage);
+      socket.on('deleted_message', handleChangeMessage);
+      socket.on('updated_message', handleChangeMessage);
+
     }
     return () => {
       if (socket) {
@@ -47,13 +67,27 @@ const ChatDetailScreen = ({ navigation, route }) => {
       }
     };
   }, []);
+  const handleClickActionMessage = (type, message) => {
+    if (!socket) {
+      socket = getSocket()
+    }
+    switch (type) {
+      case "update":
+        setOpenInputUpdateMes(message._id)
+        return
+      case "delete":
+        socket.emit("deleteMessage", message)
+        return
+    }
+  }
   useEffect(() => {
     if (messages.length) {
       setLocalMessage(messages)
     }
   }, [messages])
+
   const sendMessage = () => {
-    const socket = getSocket()
+    socket = getSocket()
     if (input.trim() && socket) {
       socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input });
       setInput('');
@@ -74,7 +108,9 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
         try {
           const imageUrl = await dispatch(saveImage(form)).unwrap();
-          const socket = getSocket();
+          if (!socket) {
+            socket = getSocket();
+          }
           if (socket) {
             socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: imageUrl });
             setShowPicker(false);
@@ -91,20 +127,88 @@ const ChatDetailScreen = ({ navigation, route }) => {
     return pattern.test(str);
   };
 
-
+  const handleUpdateMessage = (item) => {
+    if (!socket) {
+      socket = getSocket();
+    }
+    socket.emit("updateMessage", { item, updateMessage })
+    setOpenInputUpdateMes(false)
+  }
   const renderMessage = ({ item }) => {
     const isImage = isValidUrl(item.content);
-    return <View style={[
-      styles.messageContainer,
-      item.sender === me?.idUser ? styles.sent : styles.received,
-      isImage && { backgroundColor: 'transparent', padding: 0 }
-    ]}>
-      {isValidUrl(item.content) ? (
-        <Image source={{ uri: item.content }} style={styles.imageMessage} />
-      ) : (
-        <Text style={styles.messageText}>{item.content}</Text>
-      )}
+    return <View>
+      {me?.idUser === item.sender && item.content && selectedMessage === item._id &&
+        <View style={{ flexDirection: "row", alignSelf: "flex-end" }}>
+          {!isValidUrl(item.content) && <IconButton onPress={() => handleClickActionMessage("update", item)} icon="pencil" size={24} />}
+          <IconButton onPress={() => handleClickActionMessage("delete", item)} icon="trash-can" size={24} />
+        </View>}
+      <Pressable onPress={() => {
+        setOpenInputUpdateMes(false)
+        setSelectedMessage(item._id)
+      }}>
+        {item.content ?
+          <View>
+            <View
+              style={[
+                styles.messageContainer,
+                item.sender === me?.idUser ? styles.sent : styles.received,
+                isImage && { backgroundColor: 'transparent', padding: 0 }
+              ]}>
+              {isValidUrl(item.content) ? (
+                <Image source={{ uri: item.content }} style={styles.imageMessage} />
+              ) : (
+                <Text style={styles.messageText}>{item.content}</Text>
+              )}
+            </View>
+            {openInputUpdateMes === item._id &&
+
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignSelf: "flex-end",
+                  alignItems: "center",
+                  borderWidth: 1,
+                  width: 250,
+                  borderColor: '#ccc',
+                  borderRadius: 20,
+                  paddingHorizontal: 10,
+                  margin: 10,
+                }}
+              >
+                <TextInput
+                  placeholder="Nhập tin nhắn..."
+                  value={updateMessage}
+                  onChangeText={setUpdateMessage}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    fontSize: 16,
+                  }}
+                  placeholderTextColor="#888"
+                />
+
+                <TouchableOpacity onPress={() => handleUpdateMessage(item)} >
+                  <Text
+                    style={{
+                      color: '#007AFF',
+                      fontWeight: 'bold',
+                      paddingHorizontal: 10,
+                    }}
+                  >
+                    Cập nhật
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            }
+          </View>
+          : <RecalledMessage
+            css={{
+              alignSelf: item.sender === me?.idUser ? 'flex-end' : 'flex-start',
+            }}
+          />}
+      </Pressable>
     </View>
+
   };
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
@@ -189,6 +293,11 @@ const styles = StyleSheet.create({
   username: { fontSize: 18, fontFamily: 'Roboto-Bold' },
   status: { fontSize: 14, color: 'green', fontFamily: 'Roboto-Regular' },
   messagesList: { paddingHorizontal: 16, paddingTop: 10, flexGrow: 1, justifyContent: 'flex-end' },
+  buttonAction: {
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
   messageContainer: {
     padding: 12,
     borderRadius: 15,
