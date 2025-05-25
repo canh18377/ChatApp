@@ -1,14 +1,15 @@
-// src/screens/ProfileScreen.js
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Avatar, Text, Divider, List, useTheme } from 'react-native-paper';
 import { IconButton } from 'react-native-paper';
+import { useAppTheme } from '../context/ThemeContext';
+
 
 const ProfileScreen = ({ navigation, route }) => {
-  const theme = useTheme();
+  const { theme } = useAppTheme();
   const { user } = route.params;
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
         <IconButton icon="arrow-left" size={24} onPress={() => navigation.goBack()} />
       </View>
@@ -16,7 +17,7 @@ const ProfileScreen = ({ navigation, route }) => {
       {/* Avatar & Tên người dùng */}
       <View style={styles.profileContainer}>
         <Avatar.Image size={100} source={{ uri: user.avatar }} />
-        <Text style={styles.name}>{user.name}</Text>
+        <Text style={[styles.name, { color: theme.colors.onBackground }]}>{user.name}</Text>
       </View>
 
       {/* Danh sách tuỳ chọn */}

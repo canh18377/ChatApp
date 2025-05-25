@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
-import { Button, Text, TextInput, useTheme } from 'react-native-paper';
+import { Button, Text, TextInput } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import SuccessModal from '../components/Modals/SuccessModal';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchRegister, fetchLogin } from '../redux/api/authApi'
+import { fetchRegister, fetchLogin } from '../redux/api/authApi';
 
 const LoginScreen = ({ navigation }) => {
-  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -171,7 +170,7 @@ const LoginScreen = ({ navigation }) => {
       <Button
         mode="contained"
         icon="login"
-        style={[styles.button, { backgroundColor: theme.colors.primary }]}
+        style={[styles.button]}
         onPress={handleLogin}
       >
         Đăng nhập

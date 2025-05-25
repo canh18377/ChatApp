@@ -19,8 +19,12 @@ import { fetchMessages, saveImage } from '../redux/api/messageApi';
 import { getCurrentMe } from '../redux/api/userApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSocket } from '../service/socket';
+
+import { useAppTheme } from '../context/ThemeContext';
+
 const ChatDetailScreen = ({ navigation, route }) => {
   let socket = null
+  const { theme } = useAppTheme();
   const { user, conversationId, isGroup } = route.params || {};
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.messageReducer.messages);
@@ -157,7 +161,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
               {isValidUrl(item.content) ? (
                 <Image source={{ uri: item.content }} style={styles.imageMessage} />
               ) : (
-                <Text style={styles.messageText}>{item.content}</Text>
+                <Text style={[styles.messageText, { color: theme.colors.onBackground }]}>{item.content}</Text>
               )}
             </View>
             {openInputUpdateMes === item._id &&
@@ -212,7 +216,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
   };
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
-      <View style={{ flex: 1, height: '100%', position: 'relative' }}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.navigate("Main")}>
@@ -226,8 +230,8 @@ const ChatDetailScreen = ({ navigation, route }) => {
               <Avatar.Icon size={40} icon="account" />
             )}
             <View style={styles.userInfo}>
-              <Text style={styles.username}>{user?.name}</Text>
-              <Text style={styles.status}>Online</Text>
+              <Text style={[styles.username, { color: theme.colors.onBackground }]}>{user?.name}</Text>
+              <Text style={[styles.status, { color: theme.colors.onBackground }]}>Online</Text>
             </View>
           </TouchableOpacity>
 
@@ -276,6 +280,11 @@ const ChatDetailScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    height: '100%',
+    position: 'relative'
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
