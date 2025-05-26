@@ -10,14 +10,12 @@ import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
 import debounce from 'lodash.debounce';
 import { sendFriendRequest } from '../redux/api/friendApi';
-
+import { getDBConnection, createTable } from '../db/connect';
 connectSocket();
-
 const ChatListScreen = ({ navigation }) => {
   const [tokenCall, setTokenCall] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-
   const dispatch = useDispatch();
   const conversations = useSelector((state) => state.conversationReducer.conversations);
   const loading = useSelector((state) => state.conversationReducer.loading);
@@ -28,8 +26,9 @@ const ChatListScreen = ({ navigation }) => {
   const [localsearchResults, setLocalsearchResults] = useState(searchResults || [])
   if (token) {
     AsyncStorage.setItem('userToken', token);
+  } if (me) {
+    AsyncStorage.setItem('me', JSON.stringify(me));
   }
-  console.log(searchResults)
   const handleAddFriend = (user) => {
     dispatch(sendFriendRequest(user.idUser))
     setLocalsearchResults(prev => prev.map(element => {
@@ -46,9 +45,15 @@ const ChatListScreen = ({ navigation }) => {
     }
   }, [searchResults])
   useEffect(() => {
-    dispatch(getCurrentMe());
+    let me
+    const getCurrentMe = async () => {
+      jsonValue = await AsyncStorage.getItem('me');
+      me = jsonValue != null ? JSON.parse(jsonValue) : null;
+    }
+    if (!me) {
+      dispatch(getCurrentMe());
+    }
     dispatch(fetchConversations());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
