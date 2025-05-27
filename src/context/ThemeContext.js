@@ -26,7 +26,7 @@ export const ThemeProvider = ({ children }) => {
     ...MD3DarkTheme,
     colors: {
       ...MD3DarkTheme.colors,
-       searchBackground: '#3A3A3A',
+      searchBackground: '#3A3A3A',
     },
   };
 
@@ -51,8 +51,8 @@ export const ThemeProvider = ({ children }) => {
         isDarkMode,
         toggleTheme,
         theme: isDarkMode ? darkTheme : lightTheme,
-        lightTheme,  
-        darkTheme,  
+        lightTheme,
+        darkTheme,
       }}
     >
       {children}

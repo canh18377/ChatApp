@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, FlatList, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Avatar } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchConversations } from '../redux/api/conversationApi';
 import { ChatSkeletonItem } from '../screens';
@@ -10,7 +9,8 @@ import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
 import debounce from 'lodash.debounce';
 import { sendFriendRequest } from '../redux/api/friendApi';
-
+import { useAppTheme } from '../context/ThemeContext';
+import SearchBar from '../components/SearchBox';
 connectSocket();
 const ChatListScreen = ({ navigation }) => {
   const { theme } = useAppTheme();
