@@ -80,7 +80,6 @@ android {
 
     namespace "com.chatapp"
     defaultConfig {
-        missingDimensionStrategy 'react-native-sqlite-storage', 'default'
         applicationId "com.chatapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

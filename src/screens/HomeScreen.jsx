@@ -10,7 +10,6 @@ import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
 import debounce from 'lodash.debounce';
 import { sendFriendRequest } from '../redux/api/friendApi';
-import { getDBConnection, createTable } from '../db/connect';
 connectSocket();
 const ChatListScreen = ({ navigation }) => {
   const [tokenCall, setTokenCall] = useState(null);
@@ -26,8 +25,6 @@ const ChatListScreen = ({ navigation }) => {
   const [localsearchResults, setLocalsearchResults] = useState(searchResults || [])
   if (token) {
     AsyncStorage.setItem('userToken', token);
-  } if (me) {
-    AsyncStorage.setItem('me', JSON.stringify(me));
   }
   const handleAddFriend = (user) => {
     dispatch(sendFriendRequest(user.idUser))
@@ -45,14 +42,7 @@ const ChatListScreen = ({ navigation }) => {
     }
   }, [searchResults])
   useEffect(() => {
-    let me
-    const getCurrentMe = async () => {
-      jsonValue = await AsyncStorage.getItem('me');
-      me = jsonValue != null ? JSON.parse(jsonValue) : null;
-    }
-    if (!me) {
-      dispatch(getCurrentMe());
-    }
+    dispatch(getCurrentMe());
     dispatch(fetchConversations());
   }, []);
 
