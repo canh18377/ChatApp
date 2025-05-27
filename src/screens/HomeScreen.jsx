@@ -10,8 +10,11 @@ import { getCurrentMe, searchUsers } from '../redux/api/userApi';
 import { connectSocket, getSocket } from '../service/socket';
 import debounce from 'lodash.debounce';
 import { sendFriendRequest } from '../redux/api/friendApi';
+
 connectSocket();
 const ChatListScreen = ({ navigation }) => {
+  const { theme } = useAppTheme();
+
   const [tokenCall, setTokenCall] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -87,22 +90,16 @@ const ChatListScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Search Box */}
-      <View style={styles.searchWrapper}>
-        <Icon name="search" size={24} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search messages..."
-          placeholderTextColor="#999"
-          value={searchQuery}
-          onChangeText={handleSearch}
-          onFocus={() => setIsSearching(true)}
-        />
-      </View>
-
+      <SearchBar
+        value={searchQuery}
+        onChangeText={handleSearch}
+        onFocus={() => setIsSearching(true)}
+      />
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>Messages</Text>
+        <Text style={[styles.headerText, { color: theme.colors.onBackground }]}>Messages</Text>
       </View>
 
       {isSearching ? (
@@ -128,8 +125,8 @@ const ChatListScreen = ({ navigation }) => {
                   <Avatar.Icon size={40} icon="account" />
                 )}
                 <View style={styles.messageContent}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.messageText}>Nhấn để trò chuyện</Text>
+                  <Text style={[styles.name, { color: theme.colors.onBackground }]}>{item.name}</Text>
+                  <Text style={[styles.messageText, { color: theme.colors.onBackground }]}>Nhấn để trò chuyện</Text>
                 </View>
 
                 {!item.isFriend && (
@@ -137,7 +134,7 @@ const ChatListScreen = ({ navigation }) => {
                     style={styles.addFriendButton}
                     onPress={() => handleAddFriend(item)}
                   >
-                    <Text style={styles.addFriendText}>Kết bạn</Text>
+                    <Text style={[styles.addFriendText, { color: theme.colors.onBackground }]}>Kết bạn</Text>
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
@@ -146,7 +143,7 @@ const ChatListScreen = ({ navigation }) => {
 
         ) : (
           <View style={{ alignItems: 'center', marginTop: 30 }}>
-            <Text style={{ color: '#999', fontSize: 16 }}>Không tìm thấy người dùng nào</Text>
+            <Text style={styles.noResultsText}>Không tìm thấy người dùng nào</Text>
           </View>
         )
       ) : loading || isLoading ? (
@@ -157,7 +154,7 @@ const ChatListScreen = ({ navigation }) => {
         </View>
       ) : conversations.length === 0 ? (
         <View style={{ alignItems: 'center', marginTop: 40 }}>
-          <Text style={{ color: '#999', fontSize: 16 }}>Không có tin nhắn nào</Text>
+          <Text style={styles.noResultsText}>Không có tin nhắn nào</Text>
         </View>
       ) : (
         <FlatList
@@ -187,13 +184,13 @@ const ChatListScreen = ({ navigation }) => {
                 )}
 
                 <View style={styles.messageContent}>
-                  <Text style={styles.name}>{user.name}</Text>
-                  <Text style={styles.messageText} numberOfLines={1} ellipsizeMode="tail">
+                  <Text style={[styles.name, { color: theme.colors.onBackground }]}>{user.name}</Text>
+                  <Text style={[styles.messageText, { color: theme.colors.onBackground }]} numberOfLines={1} ellipsizeMode="tail">
                     {lastMessage?.content || 'Tin nhắn đã được thu hồi'}
                   </Text>
                 </View>
                 <View style={styles.rightSection}>
-                  <Text style={styles.time}>
+                  <Text style={[styles.time, { color: theme.colors.onBackground }]}>
                     {lastMessage?.timestamp
                       ? new Date(lastMessage.timestamp).toLocaleTimeString('vi-VN', {
                         hour: '2-digit',
@@ -219,14 +216,19 @@ const styles = StyleSheet.create({
   addFriendText: {
     backgroundColor: "green",
     color: "white",
-    paddingVertical: 5,      // chiều cao trong
-    paddingHorizontal: 15,    // chiều ngang trong
-    borderRadius: 8,          // bo góc mượt hơn
-    textAlign: "center",      // căn giữa chữ
-    fontWeight: "600",        // chữ đậm
-    fontSize: 16,             // cỡ chữ phù hợp
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    textAlign: "center",
+    fontWeight: "600",
+    fontSize: 16,
   },
-
+  noResultsText: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 20,
+  },
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -250,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: '#ccc',
   },
   messageContent: { flex: 1, marginLeft: 10 },
   name: { fontSize: 16, fontWeight: 'bold' },

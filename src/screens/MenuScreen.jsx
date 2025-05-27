@@ -4,8 +4,11 @@ import { Avatar, Switch, List, Divider } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector } from 'react-redux';
+
+import { useAppTheme } from '../context/ThemeContext';
+
 const MenuScreen = ({ navigation }) => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { isDarkMode, toggleTheme, theme } = useAppTheme();
   const me = useSelector((state) => state.userReducer.me);
   const handleLogout = async () => {
     Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất?', [
@@ -25,19 +28,20 @@ const MenuScreen = ({ navigation }) => {
   };
   console.log(me)
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Thông tin người dùng */}
       <View style={styles.profileContainer}>
-        {me.avatar ? (
-          <Image
-            source={{ uri: me.avatar }}
-            style={{ width: 70, height: 70, borderRadius: 50 }} // 👈 bo góc cho avatar tròn
-          />
-        ) : (
-          <Avatar.Icon size={50} icon="account" />
-        )}
-        <Text style={styles.name}>{me?.name}</Text>
+        <Image
+          source={
+            me?.avatar
+              ? { uri: me.avatar }
+              : require('../assets/images/noAvatar.jpg')
+          }
+          style={styles.avatarImage}
+        />
+        <Text style={[styles.name, { color: theme.colors.onBackground }]}>{me?.name}</Text>
       </View>
+
 
       <Divider style={styles.divider} />
 
@@ -45,10 +49,10 @@ const MenuScreen = ({ navigation }) => {
       <View style={styles.optionsContainer}>
         <View style={styles.optionRow}>
           <View style={styles.optionLeft}>
-            <Icon name="theme-light-dark" size={22} color="#555" />
-            <Text style={styles.optionLabel}>Chế độ tối</Text>
+            <Icon style={{ color: theme.colors.onBackground }} name="theme-light-dark" size={22} color="#555" />
+            <Text style={[styles.optionLabel, { color: theme.colors.onBackground }]}>Chế độ tối</Text>
           </View>
-          <Switch value={darkMode} onValueChange={() => setDarkMode(!darkMode)} />
+          <Switch value={isDarkMode} onValueChange={toggleTheme} />
         </View>
 
         <TouchableOpacity onPress={() => navigation.navigate('MyProfileScreen')}>
@@ -88,6 +92,11 @@ const styles = StyleSheet.create({
   avatar: {
     backgroundColor: '#007AFF',
   },
+  avatarImage: {
+  width: 70,
+  height: 70,
+  borderRadius: 50,
+},
   name: {
     fontSize: 20,
     fontWeight: 'bold',

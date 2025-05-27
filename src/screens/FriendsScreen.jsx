@@ -11,7 +11,10 @@ import {
   rejectFriendRequest
 } from '../redux/api/friendApi';
 
+import { useAppTheme } from '../context/ThemeContext';
+
 const FriendsScreen = () => {
+  const { theme } = useAppTheme();
   const [activeTab, setActiveTab] = useState('Danh sách');
   const dispatch = useDispatch();
   const { friends, sentRequests, receivedRequests, loading, loadingReject, loadingAccept } = useSelector(
@@ -36,14 +39,14 @@ const FriendsScreen = () => {
         <Avatar.Icon size={50} name="account" />
       )}
       <View style={styles.friendInfo}>
-        <Text style={styles.friendName}>{friend.name}</Text>
-        {friend.lastMessage && <Text style={styles.lastMessage}>{friend.lastMessage}</Text>}
+        <Text style={[styles.friendName, { color: theme.colors.onBackground }]}>{friend.name}</Text>
+        {friend.lastMessage && <Text style={[styles.lastMessage, { color: theme.colors.onBackground }]}>{friend.lastMessage}</Text>}
       </View>
     </View>
   };
 
   const renderSentRequestItem = ({ item }) => {
-    const recipient = item.recipient; // Lấy thông tin người nhận từ "recipient"
+    const recipient = item.recipient; 
     return (
       <View style={styles.requestItem}>
         {recipient?.avatar ? (
@@ -51,7 +54,7 @@ const FriendsScreen = () => {
         ) : (
           <Avatar.Icon size={40} icon="account" />
         )}
-        <Text style={styles.requestName}>{recipient?.name}</Text>
+        <Text style={[styles.requestName, { color: theme.colors.onBackground }]}>{recipient?.name}</Text>
       </View>
     );
   };
@@ -65,7 +68,7 @@ const FriendsScreen = () => {
         ) : (
           <Avatar.Icon size={40} icon="account" />
         )}
-        <Text style={styles.requestName}>{requester.name}</Text>
+        <Text style={[styles.requestName, { color: theme.colors.onBackground }]}>{requester.name}</Text>
         <View style={styles.requestActions}>
           <Button
             mode="contained"
@@ -97,8 +100,8 @@ const FriendsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerText}>Bạn bè</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.headerText, { color: theme.colors.onBackground }]}>Bạn bè</Text>
       {/* Tabs */}
       <View style={styles.tabContainer}>
         {['Danh sách', 'Đã gửi', 'Đã nhận'].map((tab) => (
@@ -112,7 +115,7 @@ const FriendsScreen = () => {
             }
             }
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+            <Text style={[styles.tabText, { color: theme.colors.onBackground }, activeTab === tab && styles.activeTabText]}>
               {tab}
             </Text>
           </TouchableOpacity>
@@ -125,7 +128,7 @@ const FriendsScreen = () => {
           data={friends}
           renderItem={renderFriendItem}
           keyExtractor={(item) => item._id || item.id}
-          ListEmptyComponent={<Text style={styles.emptyText}>Chưa có bạn bè</Text>}
+          ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>Chưa có bạn bè</Text>}
         />
       )}
       {activeTab === 'Đã gửi' && (
@@ -133,7 +136,7 @@ const FriendsScreen = () => {
           data={sentRequests}
           renderItem={renderSentRequestItem}
           keyExtractor={(item) => item._id || Math.random()}
-          ListEmptyComponent={<Text style={styles.emptyText}>Chưa gửi lời mời nào</Text>}
+          ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>Chưa gửi lời mời nào</Text>}
         />
       )}
       {activeTab === 'Đã nhận' && (
@@ -141,7 +144,7 @@ const FriendsScreen = () => {
           data={receivedRequests}
           renderItem={renderReceivedRequestItem}
           keyExtractor={(item) => item._id || item.id}
-          ListEmptyComponent={<Text style={styles.emptyText}>Chưa nhận được lời mời nào</Text>}
+          ListEmptyComponent={<Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>Chưa nhận được lời mời nào</Text>}
         />
       )}
     </View>

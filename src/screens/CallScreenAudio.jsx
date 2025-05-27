@@ -8,8 +8,11 @@ import {
 } from 'react-native-agora';
 import { useSelector } from 'react-redux';
 const APP_ID = 'ab39965c3627442e8d8bf38a47c911d2';
+import { useAppTheme } from '../context/ThemeContext';
+
 
 const AudioCallScreen = ({ navigation, route }) => {
+    const { theme } = useAppTheme();
     const { token, channelName, uid } = route.params.tokenCall;
     const receiverName = route.params.tokenCall.receiverName;
     const receiverAvatar = route.params.tokenCall.receiverAvatar;
@@ -83,28 +86,28 @@ const AudioCallScreen = ({ navigation, route }) => {
         return (
             <>
                 <Avatar.Text size={100} label={avatarText.substring(0, 2)} style={styles.avatar} />
-                <Text style={styles.username}>{nameText}</Text>
+                <Text style={[styles.username, { color: theme.colors.onBackground }]}>{nameText}</Text>
             </>
         );
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {callStatus === 'waiting' && (
                 <>
                     {renderAvatar()}
-                    <Text style={styles.statusText}>Đang kết nối...</Text>
+                    <Text style={[styles.statusText, { color: theme.colors.onBackground }]}>Đang kết nối...</Text>
                 </>
             )}
 
             {callStatus === 'inCall' && (
                 <>
                     {renderAvatar()}
-                    <Text style={styles.statusText}>Đang trong cuộc gọi với {callerName || receiverName}</Text>
+                    <Text style={[styles.statusText, { color: theme.colors.onBackground }]}>Đang trong cuộc gọi với {callerName || receiverName}</Text>
                 </>
             )}
             {callStatus === 'ended' && (
-                <Text style={styles.statusText}>Cuộc gọi đã kết thúc</Text>
+                <Text style={[styles.statusText, { color: theme.colors.onBackground }]}>Cuộc gọi đã kết thúc</Text>
             )}
 
             <View style={{ display: "flex" }}>
