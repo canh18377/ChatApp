@@ -11,10 +11,12 @@ import debounce from 'lodash.debounce';
 import { sendFriendRequest } from '../redux/api/friendApi';
 import { useAppTheme } from '../context/ThemeContext';
 import SearchBar from '../components/SearchBox';
+import { FAB } from 'react-native-paper';
+import AddGroupUi from "../components/ui/AddGroupUi"
+import { createGroup } from '../redux/api/groupApi';
 connectSocket();
 const ChatListScreen = ({ navigation }) => {
   const { theme } = useAppTheme();
-
   const [tokenCall, setTokenCall] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -26,6 +28,7 @@ const ChatListScreen = ({ navigation }) => {
   const token = useSelector((state) => state.authReducer.token);
   const searchResults = useSelector((state) => state.userReducer.searchResults);
   const [localsearchResults, setLocalsearchResults] = useState(searchResults || [])
+  const [isOpenModalAddGroup, setIsOpenModalAddGroup] = useState(false)
   if (token) {
     AsyncStorage.setItem('userToken', token);
   }
@@ -71,7 +74,6 @@ const ChatListScreen = ({ navigation }) => {
       navigation.navigate('CallScreenAudio', { tokenCall });
     }
   }, [tokenCall, navigation]);
-
   const debouncedSearch = useCallback(
     debounce((text) => {
       if (text.trim() === '') {
@@ -88,14 +90,45 @@ const ChatListScreen = ({ navigation }) => {
     setSearchQuery(text);
     debouncedSearch(text);
   };
-
+  const handleAddGroup = (groupInfo) => {
+    const { name, members } = groupInfo
+    dispatch(createGroup({ name, participants: [...members, me.idUser], isGroup: true }))
+    dispatch(fetchConversations());
+  }
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Search Box */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={handleSearch}
-        onFocus={() => setIsSearching(true)}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+        {/* Search Box */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={handleSearch}
+            onFocus={() => setIsSearching(true)}
+          />
+          <FAB
+            icon="plus"
+            onPress={() => setIsOpenModalAddGroup(true)}
+            style={{
+              marginBottom: 15,
+              height: 30,
+              width: 30,
+              borderRadius: 15,
+              borderWidth: 1,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          />
+        </View>
+      </View>
+      <AddGroupUi
+        me={me}
+        visible={isOpenModalAddGroup}
+        onClose={() => setIsOpenModalAddGroup(false)}
+        users={[]}
+        onConfirm={handleAddGroup}
+        dispatch={dispatch}
+        useSelector={useSelector}
       />
       {/* Header */}
       <View style={styles.header}>
@@ -161,34 +194,47 @@ const ChatListScreen = ({ navigation }) => {
           data={conversations}
           keyExtractor={(item) => item.conversation._id}
           renderItem={({ item }) => {
-            const { plainUser, lastMessage } = item;
-            const user = plainUser;
-            const avatarUrl = user?.avatar;
-
+            const { conversation, lastMessage, plainUser } = item;
+            const isGroup = conversation.isGroup;
+            const avatarUrl = isGroup ? conversation.groupAvatar : plainUser?.avatar;
+            const name = isGroup ? conversation.name : plainUser?.name;
+            const participants = conversation.participants
             return (
               <TouchableOpacity
                 style={styles.messageItem}
                 onPress={() =>
                   navigation.navigate('ChatDetailScreen', {
-                    user,
-                    isGroup: item?.conversation.isGroup,
-                    conversationId: item?.conversation._id,
-                    tokenCall,
+                    user: plainUser,
+                    participants: participants,
+                    name: name,
+                    isGroup,
+                    conversationId: conversation._id,
+                    groupAvatar: conversation.groupAvatar,
+                    participants: participants
+
                   })
                 }
               >
                 {avatarUrl ? (
                   <Avatar.Image size={40} source={{ uri: avatarUrl }} />
                 ) : (
-                  <Avatar.Icon size={40} icon="account" />
+                  isGroup ? <Avatar.Icon size={40} icon="account-group" />
+                    : <Avatar.Icon size={40} icon="account" />
                 )}
 
                 <View style={styles.messageContent}>
-                  <Text style={[styles.name, { color: theme.colors.onBackground }]}>{user.name}</Text>
-                  <Text style={[styles.messageText, { color: theme.colors.onBackground }]} numberOfLines={1} ellipsizeMode="tail">
-                    {lastMessage?.content || 'Tin nhắn đã được thu hồi'}
+                  <Text style={[styles.name, { color: theme.colors.onBackground }]}>
+                    {name || 'Tên nhóm chưa có'}
+                  </Text>
+                  <Text
+                    style={[styles.messageText, { color: theme.colors.onBackground }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {lastMessage?.content || (isGroup ? 'Chưa có tin nhắn nào' : 'Chưa có tin nhắn')}
                   </Text>
                 </View>
+
                 <View style={styles.rightSection}>
                   <Text style={[styles.time, { color: theme.colors.onBackground }]}>
                     {lastMessage?.timestamp
@@ -197,13 +243,13 @@ const ChatListScreen = ({ navigation }) => {
                         minute: '2-digit',
                       })
                       : ''}
-
                   </Text>
                 </View>
               </TouchableOpacity>
             );
           }}
         />
+
       )}
     </View>
   );

@@ -4,12 +4,14 @@ import userReducer from '../reducers/userReducer';
 import conversationReducer from '../reducers/conversationReducer';
 import messageReducer from '../reducers/messageReducer';
 import friendReducer from '../reducers/friendReducer';
+import groupReducer from '../reducers/groupReducer';
 const rootReducer = combineReducers({
   authReducer,
   userReducer,
   conversationReducer,
   messageReducer,
-  friendReducer
+  friendReducer,
+  groupReducer
 });
 
 export default rootReducer;

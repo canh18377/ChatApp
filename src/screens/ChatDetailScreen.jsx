@@ -19,13 +19,12 @@ import { fetchMessages, saveImage } from '../redux/api/messageApi';
 import { getCurrentMe } from '../redux/api/userApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSocket } from '../service/socket';
-
 import { useAppTheme } from '../context/ThemeContext';
 
 const ChatDetailScreen = ({ navigation, route }) => {
   let socket = null
   const { theme } = useAppTheme();
-  const { user, conversationId, isGroup } = route.params || {};
+  const { user, name, isGroup, conversationId, participants, groupAvatar } = route.params || {};
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.messageReducer.messages);
   const loading = useSelector((state) => state.messageReducer.loading);
@@ -43,11 +42,14 @@ const ChatDetailScreen = ({ navigation, route }) => {
     dispatch(getCurrentMe())
     const handleReceiveMessage = (newMessage) => {
       setLocalMessage((prevMessages) => {
+        const isExist = prevMessages.some(msg => msg._id === newMessage._id);
+        if (isExist) return prevMessages;
         const updatedMessages = [...prevMessages, newMessage];
         updatedMessages.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         return updatedMessages;
       });
     };
+
     const handleChangeMessage = (newMessage) => {
       setLocalMessage(prev => {
         return prev.map(mes => {
@@ -93,7 +95,10 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const sendMessage = () => {
     socket = getSocket()
     if (input.trim() && socket) {
-      socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input });
+      console.log(participants)
+      !isGroup
+        ? socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: input })
+        : socket.emit('group_message', { senderId: me?.idUser, receiverIds: participants, message: input, groupName: name, groupAvatar: groupAvatar });
       setInput('');
       setShowPicker(false);
     }
@@ -116,10 +121,10 @@ const ChatDetailScreen = ({ navigation, route }) => {
             socket = getSocket();
           }
           if (socket) {
-            socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: imageUrl });
-            setShowPicker(false);
+            !isGroup
+              ? socket.emit('private_message', { senderId: me?.idUser, receiverId: user.idUser, message: imageUrl })
+              : socket.emit('group_message', { senderId: me?.idUser, receiverIds: participants, message: imageUrl, groupName: name, groupAvatar: groupAvatar }); setShowPicker(false);
           }
-
         } catch (err) {
           console.error("Upload image error:", err);
         }
@@ -222,22 +227,21 @@ const ChatDetailScreen = ({ navigation, route }) => {
           <TouchableOpacity onPress={() => navigation.navigate("Main")}>
             <IconButton icon="arrow-left" size={24} />
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('ProfileScreen', { user })}>
-            {user?.avatar ? (
+            {groupAvatar || user?.avatar ? (
               <Image source={user?.avatar} />
             ) : (
-              <Avatar.Icon size={40} icon="account" />
+              isGroup ? <Avatar.Icon size={40} icon="account-group" /> : <Avatar.Icon size={40} icon="account" />
             )}
             <View style={styles.userInfo}>
-              <Text style={[styles.username, { color: theme.colors.onBackground }]}>{user?.name}</Text>
+              <Text style={[styles.username, { color: theme.colors.onBackground }]}>{name || user?.name}</Text>
               <Text style={[styles.status, { color: theme.colors.onBackground }]}>Online</Text>
             </View>
           </TouchableOpacity>
 
           <IconButton icon="phone" onPress={() => {
             const socket = getSocket()
-            socket.emit("start_call_audio", { toUserId: user.idUser, fromUserId: me?.idUser })
+            socket.emit("start_call_audio", { toUserId: isGroup ? participants : user.idUser, fromUserId: me?.idUser, name: name || null, groupAvatar: groupAvatar || null })
           }} size={24} />
           <IconButton icon="video" size={24} />
         </View>
@@ -281,7 +285,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
     height: '100%',
     position: 'relative'
   },
@@ -318,7 +322,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   received: {
-    backgroundColor: 'black',
+    backgroundColor: '#8BC34A',
     alignSelf: 'flex-start',
   },
   messageText: { fontSize: 16, color: '#fff', fontFamily: 'Roboto-Regular' },

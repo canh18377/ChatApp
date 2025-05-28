@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   searchInput: {
-    flex: 1,
+    flex: 0.95,
     paddingVertical: 8,
     fontSize: 16,
   },
