@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { InteractionManager } from 'react-native';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { Avatar, Switch, List, Divider } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector } from 'react-redux';
-
 import { useAppTheme } from '../context/ThemeContext';
-
 const MenuScreen = ({ navigation }) => {
   const { isDarkMode, toggleTheme, theme } = useAppTheme();
   const me = useSelector((state) => state.userReducer.me);
@@ -18,15 +17,16 @@ const MenuScreen = ({ navigation }) => {
         style: 'destructive',
         onPress: async () => {
           await AsyncStorage.removeItem('userToken');
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'LoginScreen' }],
+          InteractionManager.runAfterInteractions(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'LoginScreen' }],
+            });
           });
         },
       },
     ]);
   };
-  console.log(me)
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Thông tin người dùng */}
