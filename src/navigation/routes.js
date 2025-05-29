@@ -8,6 +8,7 @@ import {
   ChatDetailScreen,
   SplashScreen,
   CallScreenAudio,
+  GroupInfoScreen
 } from '../screens';
 import MainTabNavigator from './MainTabNavigator';
 // Mảng chứa các màn hình
@@ -21,5 +22,5 @@ export const screens = [
   { name: 'ProfileScreen', component: ProfileScreen },
   { name: 'MyProfileScreen', component: MyProfileScreen },
   { name: 'CallScreenAudio', component: CallScreenAudio },
-
+  { name: 'GroupInfoScreen', component: GroupInfoScreen },
 ];

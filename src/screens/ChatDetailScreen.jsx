@@ -28,14 +28,13 @@ const ChatDetailScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
   const messages = useSelector((state) => state.messageReducer.messages);
   const loading = useSelector((state) => state.messageReducer.loading);
-  const [localMessage, setLocalMessage] = useState(messages)
+  const [localMessage, setLocalMessage] = useState([])
   const me = useSelector((state) => state.userReducer.me);
   const [input, setInput] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(false)
   const [openInputUpdateMes, setOpenInputUpdateMes] = useState(false)
   const [updateMessage, setUpdateMessage] = useState("")
-
   useEffect(() => {
     const data = conversationId ? { conversationId: conversationId, exist: true } : { participants: [user.idUser, me.idUser], exist: false }
     dispatch(fetchMessages(data));
@@ -58,6 +57,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
         })
       })
     }
+
     if (!socket) {
       socket = getSocket()
     }
@@ -73,6 +73,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
       }
     };
   }, []);
+
   const handleClickActionMessage = (type, message) => {
     if (!socket) {
       socket = getSocket()
@@ -219,6 +220,9 @@ const ChatDetailScreen = ({ navigation, route }) => {
     </View>
 
   };
+  if (!localMessage.length) {
+    return
+  }
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -227,7 +231,9 @@ const ChatDetailScreen = ({ navigation, route }) => {
           <TouchableOpacity onPress={() => navigation.navigate("Main")}>
             <IconButton icon="arrow-left" size={24} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.profileSection} onPress={() => navigation.navigate('ProfileScreen', { user })}>
+          <TouchableOpacity style={styles.profileSection} onPress={() =>
+            !isGroup && navigation.navigate('ProfileScreen', { user })
+          }>
             {groupAvatar || user?.avatar ? (
               <Image source={user?.avatar} />
             ) : (
@@ -239,11 +245,10 @@ const ChatDetailScreen = ({ navigation, route }) => {
             </View>
           </TouchableOpacity>
 
-          <IconButton icon="phone" onPress={() => {
+          {!isGroup && <IconButton icon="phone" onPress={() => {
             const socket = getSocket()
             socket.emit("start_call_audio", { toUserId: isGroup ? participants : user.idUser, fromUserId: me?.idUser, name: name || null, groupAvatar: groupAvatar || null })
-          }} size={24} />
-          <IconButton icon="video" size={24} />
+          }} size={24} />}
         </View>
 
         {/* Chat Messages */}

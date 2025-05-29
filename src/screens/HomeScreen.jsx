@@ -90,9 +90,14 @@ const ChatListScreen = ({ navigation }) => {
     setSearchQuery(text);
     debouncedSearch(text);
   };
-  const handleAddGroup = (groupInfo) => {
-    const { name, members } = groupInfo
-    dispatch(createGroup({ name, participants: [...members, me.idUser], isGroup: true }))
+  const handleAddGroup = async (groupInfo) => {
+    const { name, members, avatar } = groupInfo
+    console.log(avatar)
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('participants', JSON.stringify([...members, me.idUser]));
+    formData.append('avatar', avatar);
+    await dispatch(createGroup(formData))
     dispatch(fetchConversations());
   }
   return (
@@ -149,16 +154,16 @@ const ChatListScreen = ({ navigation }) => {
                   navigation.navigate('ChatDetailScreen', { user: item, isGroup: false });
                 }}
               >
-                {item.avatar ? (
+                {item.avatar || item.groupAvatar ? (
                   <Image
-                    source={{ uri: item.avatar }}
+                    source={{ uri: item.avatar || item.groupAvatar }}
                     style={{ width: 40, height: 40, borderRadius: 20 }}
                   />
                 ) : (
                   <Avatar.Icon size={40} icon="account" />
                 )}
                 <View style={styles.messageContent}>
-                  <Text style={[styles.name, { color: theme.colors.onBackground }]}>{item.name}</Text>
+                  <Text style={[styles.name, { color: theme.colors.onBackground }]}>{item.name} </Text>
                   <Text style={[styles.messageText, { color: theme.colors.onBackground }]}>Nhấn để trò chuyện</Text>
                 </View>
 

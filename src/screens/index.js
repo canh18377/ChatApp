@@ -9,6 +9,7 @@ import SplashScreen from './SplashScreen';
 import ChatSkeletonItem from '../components/ChatSkeletonItem';
 import FriendsScreen from './FriendsScreen';
 import CallScreenAudio from './CallScreenAudio';
+import GroupInfoScreen from './GroupInfoScreen';
 export {
   SplashScreen,
   HomeScreen,
@@ -21,4 +22,5 @@ export {
   ChatSkeletonItem,
   FriendsScreen,
   CallScreenAudio,
+  GroupInfoScreen
 };

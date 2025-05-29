@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, FlatList, StyleSheet } from 'react-native';
-import { TextInput, Card, Checkbox, Button, Text, Portal, Divider, Provider, Avatar } from 'react-native-paper';
+import { Modal, View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { TextInput, Card, Checkbox, Button, Text, Portal, Divider, Avatar } from 'react-native-paper';
 import { fetchFriendList } from '../../redux/api/friendApi';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) => {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [groupName, setGroupName] = useState('');
+    const [groupAvatar, setGroupAvatar] = useState(null); // Lưu URI ảnh avatar nhóm
     const friends = useSelector(state => state.friendReducer.friends);
 
     useEffect(() => {
@@ -23,10 +25,17 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
         return (
             <Card style={styles.card}>
                 <Card.Content style={styles.userRow}>
-                    <Avatar.Text
-                        label={friend.name.split(' ').slice(-1)[0][0]}
-                        size={40}
-                    />
+                    {friend.avatarUrl ? (
+                        <Avatar.Image
+                            source={{ uri: friend.avatarUrl }}
+                            size={40}
+                        />
+                    ) : (
+                        <Avatar.Text
+                            label={friend.name.split(' ').slice(-1)[0][0]}
+                            size={40}
+                        />
+                    )}
                     <Text style={styles.userName}>{friend.name}</Text>
                     <Checkbox
                         status={selectedUsers.includes(friend.idUser) ? 'checked' : 'unchecked'}
@@ -35,6 +44,19 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
                 </Card.Content>
             </Card>
         );
+    };
+
+    const pickImage = () => {
+        launchImageLibrary({ mediaType: 'photo' }, (response) => {
+            if (response?.assets && response.assets.length > 0) {
+                const asset = response.assets[0];
+                setGroupAvatar({
+                    uri: asset.uri,
+                    name: asset.fileName || 'photo.jpg',
+                    type: asset.type || 'image/jpeg',
+                })
+            }
+        });
     };
 
     const handleConfirm = () => {
@@ -46,14 +68,19 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
             alert("Vui lòng chọn ít nhất 2 người dùng để tạo nhóm.");
             return;
         }
-        onConfirm({ name: groupName.trim(), members: selectedUsers });
+        if (!groupAvatar) {
+            alert("Vui lòng chọn ảnh nhóm");
+            return;
+        }
+        onConfirm({ name: groupName.trim(), members: selectedUsers, avatar: groupAvatar });
         onClose();
         setGroupName('');
         setSelectedUsers([]);
+        setGroupAvatar(null);
     };
 
     if (!friends.length) {
-        return <Text>Loading...</Text>;
+        return null;
     }
 
     return (
@@ -62,6 +89,17 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
                 <View style={styles.overlay}>
                     <View style={styles.container}>
                         <Text style={styles.title}>Tạo nhóm trò chuyện</Text>
+
+                        {/* Avatar nhóm */}
+                        <TouchableOpacity onPress={pickImage} style={styles.avatarPicker}>
+                            {groupAvatar ? (
+                                <Avatar.Image size={80} source={{ uri: groupAvatar.uri }} />
+                            ) : (
+                                <Avatar.Icon size={80} icon="camera" />
+                            )}
+                            <Text style={styles.avatarHint}>Chọn ảnh đại diện nhóm</Text>
+                        </TouchableOpacity>
+
                         <TextInput
                             label="Tên nhóm"
                             value={groupName}
@@ -72,7 +110,7 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
                         <Divider style={{ marginBottom: 8 }} />
                         <FlatList
                             data={friends}
-                            keyExtractor={(item) => item.id}
+                            keyExtractor={(item) => item._id}
                             renderItem={renderUserItem}
                         />
                         <View style={styles.actions}>
@@ -108,6 +146,15 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 8,
+    },
+    avatarPicker: {
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    avatarHint: {
+        marginTop: 4,
+        fontSize: 12,
+        color: 'gray',
     },
     input: {
         marginBottom: 12,
