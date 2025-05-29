@@ -93,10 +93,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   avatarImage: {
-  width: 70,
-  height: 70,
-  borderRadius: 50,
-},
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+  },
   name: {
     fontSize: 20,
     fontWeight: 'bold',

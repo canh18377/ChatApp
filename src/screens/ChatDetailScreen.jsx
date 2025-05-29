@@ -220,9 +220,7 @@ const ChatDetailScreen = ({ navigation, route }) => {
     </View>
 
   };
-  if (!localMessage.length) {
-    return
-  }
+
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80} style={{ height: '100%' }}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
