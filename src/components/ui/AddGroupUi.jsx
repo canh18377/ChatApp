@@ -1,29 +1,86 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Modal, View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { TextInput, Card, Checkbox, Button, Text, Portal, Divider, Avatar } from 'react-native-paper';
 import { fetchFriendList } from '../../redux/api/friendApi';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { useAppTheme } from '../../context/ThemeContext';
+
+
 
 const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) => {
+    const { theme } = useAppTheme();
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [groupName, setGroupName] = useState('');
-    const [groupAvatar, setGroupAvatar] = useState(null); // Lưu URI ảnh avatar nhóm
+    const [groupAvatar, setGroupAvatar] = useState(null);
     const friends = useSelector(state => state.friendReducer.friends);
 
-    useEffect(() => {
-        dispatch(fetchFriendList());
-    }, []);
+    // Tạo ref cho TextInput
+    const groupNameRef = useRef('');
 
-    const toggleSelect = (userId) => {
+    useEffect(() => {
+        if (visible) {
+            dispatch(fetchFriendList());
+        }
+    }, [visible, dispatch]);
+
+    // Memoize toggleSelect để tránh re-create function mỗi lần render
+    const toggleSelect = useCallback((userId) => {
         setSelectedUsers((prev) =>
             prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
         );
-    };
+    }, []);
 
-    const renderUserItem = ({ item }) => {
+    // Memoize pickImage function
+    const pickImage = useCallback(() => {
+        launchImageLibrary({ mediaType: 'photo' }, (response) => {
+            if (response?.assets && response.assets.length > 0) {
+                const asset = response.assets[0];
+                setGroupAvatar({
+                    uri: asset.uri,
+                    name: asset.fileName || 'photo.jpg',
+                    type: asset.type || 'image/jpeg',
+                });
+            }
+        });
+    }, []);
+
+    // Handle text change với ref - không trigger re-render
+    const handleTextChange = useCallback((text) => {
+        groupNameRef.current = text;
+    }, []);
+
+    // Memoize handleConfirm - sử dụng ref thay vì state
+    const handleConfirm = useCallback(() => {
+        const currentGroupName = groupNameRef.current;
+        if (!currentGroupName.trim()) {
+            alert("Vui lòng nhập tên nhóm.");
+            return;
+        }
+        if (selectedUsers.length < 2) {
+            alert("Vui lòng chọn ít nhất 2 người dùng để tạo nhóm.");
+            return;
+        }
+        if (!groupAvatar) {
+            alert("Vui lòng chọn ảnh nhóm");
+            return;
+        }
+        onConfirm({
+            name: currentGroupName.trim(),
+            members: selectedUsers,
+            avatar: groupAvatar
+        });
+        onClose();
+        // Reset form
+        groupNameRef.current = '';
+        setSelectedUsers([]);
+        setGroupAvatar(null);
+    }, [selectedUsers, groupAvatar, onConfirm, onClose]);
+
+    // Memoize renderUserItem để tránh re-create
+    const renderUserItem = useCallback(({ item }) => {
         const friend = me?.idUser !== item.requester.idUser ? item.requester : item.recipient;
         return (
-            <Card style={styles.card}>
+            <Card style={[styles.card, { backgroundColor: theme.colors.inputText }]}>
                 <Card.Content style={styles.userRow}>
                     {friend.avatarUrl ? (
                         <Avatar.Image
@@ -44,40 +101,19 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
                 </Card.Content>
             </Card>
         );
-    };
+    }, [me, selectedUsers, toggleSelect]);
 
-    const pickImage = () => {
-        launchImageLibrary({ mediaType: 'photo' }, (response) => {
-            if (response?.assets && response.assets.length > 0) {
-                const asset = response.assets[0];
-                setGroupAvatar({
-                    uri: asset.uri,
-                    name: asset.fileName || 'photo.jpg',
-                    type: asset.type || 'image/jpeg',
-                })
-            }
-        });
-    };
+    // Memoize keyExtractor
+    const keyExtractor = useCallback((item) => item._id, []);
 
-    const handleConfirm = () => {
-        if (!groupName.trim()) {
-            alert("Vui lòng nhập tên nhóm.");
-            return;
+    // Reset form khi modal đóng
+    useEffect(() => {
+        if (!visible) {
+            groupNameRef.current = '';
+            setSelectedUsers([]);
+            setGroupAvatar(null);
         }
-        if (selectedUsers.length < 2) {
-            alert("Vui lòng chọn ít nhất 2 người dùng để tạo nhóm.");
-            return;
-        }
-        if (!groupAvatar) {
-            alert("Vui lòng chọn ảnh nhóm");
-            return;
-        }
-        onConfirm({ name: groupName.trim(), members: selectedUsers, avatar: groupAvatar });
-        onClose();
-        setGroupName('');
-        setSelectedUsers([]);
-        setGroupAvatar(null);
-    };
+    }, [visible]);
 
     if (!friends.length) {
         return null;
@@ -102,16 +138,27 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
 
                         <TextInput
                             label="Tên nhóm"
-                            value={groupName}
-                            onChangeText={setGroupName}
+                            defaultValue={groupName}
+                            onChangeText={handleTextChange}
                             mode="outlined"
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: theme.colors.inputText }]}
+                            // Thêm các props này để tối ưu performance
+                            autoCorrect={false}
+                            autoCapitalize="sentences"
+                            returnKeyType="done"
                         />
                         <Divider style={{ marginBottom: 8 }} />
                         <FlatList
                             data={friends}
-                            keyExtractor={(item) => item._id}
+                            keyExtractor={keyExtractor}
                             renderItem={renderUserItem}
+                            // Thêm các props tối ưu cho FlatList
+                            removeClippedSubviews={true}
+                            maxToRenderPerBatch={10}
+                            updateCellsBatchingPeriod={50}
+                            initialNumToRender={10}
+                            windowSize={10}
+                            getItemLayout={null}
                         />
                         <View style={styles.actions}>
                             <Button onPress={onClose}>Huỷ</Button>
@@ -126,7 +173,7 @@ const AddGroupUi = ({ dispatch, useSelector, visible, me, onClose, onConfirm }) 
     );
 };
 
-export default AddGroupUi;
+export default React.memo(AddGroupUi);
 
 const styles = StyleSheet.create({
     overlay: {
@@ -162,6 +209,7 @@ const styles = StyleSheet.create({
     card: {
         marginVertical: 4,
     },
+
     userRow: {
         flexDirection: 'row',
         alignItems: 'center',

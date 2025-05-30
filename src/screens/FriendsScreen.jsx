@@ -33,11 +33,8 @@ const FriendsScreen = () => {
   const renderFriendItem = ({ item }) => {
     const friend = me?.idUser !== item.requester ? item.requester : item.recipient
     return <View style={styles.friendItem}>
-      {friend.avatar ? (
-        <Avatar.Image size={50} source={{ uri: friend.avatar }} style={styles.avatar} />
-      ) : (
-        <Avatar.Icon size={50} name="account" />
-      )}
+
+      <Avatar.Image size={50} source={friend.avatar ? { uri: friend.avatar } : require('../assets/images/noAvatar.jpg')} style={styles.avatar} />
       <View style={styles.friendInfo}>
         <Text style={[styles.friendName, { color: theme.colors.onBackground }]}>{friend.name}</Text>
         {friend.lastMessage && <Text style={[styles.lastMessage, { color: theme.colors.onBackground }]}>{friend.lastMessage}</Text>}
@@ -46,11 +43,11 @@ const FriendsScreen = () => {
   };
 
   const renderSentRequestItem = ({ item }) => {
-    const recipient = item.recipient; 
+    const recipient = item.recipient;
     return (
       <View style={styles.requestItem}>
         {recipient?.avatar ? (
-          <Avatar.Image size={50} source={{ uri: recipient?.avatar }} style={styles.avatar} />
+          <Avatar.Image size={50} source={recipient.avatar ? { uri: recipient?.avatar } : require('../assets/images/noAvatar.jpg')} style={styles.avatar} />
         ) : (
           <Avatar.Icon size={40} icon="account" />
         )}
@@ -64,7 +61,7 @@ const FriendsScreen = () => {
     return (
       <View style={styles.requestItem}>
         {requester.avatar ? (
-          <Avatar.Image size={50} source={{ uri: requester.avatar }} style={styles.avatar} />
+          <Avatar.Image size={50} source={requester.avatar ? { uri: requester.avatar } : require('../assets/images/noAvatar.jpg')} style={styles.avatar} />
         ) : (
           <Avatar.Icon size={40} icon="account" />
         )}

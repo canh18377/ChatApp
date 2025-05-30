@@ -14,7 +14,9 @@ import SearchBar from '../components/SearchBox';
 import { FAB } from 'react-native-paper';
 import AddGroupUi from "../components/ui/AddGroupUi"
 import { createGroup } from '../redux/api/groupApi';
+
 connectSocket();
+
 const ChatListScreen = ({ navigation }) => {
   const { theme } = useAppTheme();
   const [tokenCall, setTokenCall] = useState(null);
@@ -29,9 +31,11 @@ const ChatListScreen = ({ navigation }) => {
   const searchResults = useSelector((state) => state.userReducer.searchResults);
   const [localsearchResults, setLocalsearchResults] = useState(searchResults || [])
   const [isOpenModalAddGroup, setIsOpenModalAddGroup] = useState(false)
+
   if (token) {
     AsyncStorage.setItem('userToken', token);
   }
+
   const handleAddFriend = (user) => {
     dispatch(sendFriendRequest(user.idUser))
     setLocalsearchResults(prev => prev.map(element => {
@@ -42,11 +46,13 @@ const ChatListScreen = ({ navigation }) => {
       } else return element
     }))
   };
+
   useEffect(() => {
     if (searchResults.length) {
       setLocalsearchResults(searchResults)
     }
   }, [searchResults])
+
   useEffect(() => {
     dispatch(getCurrentMe());
     dispatch(fetchConversations());
@@ -74,6 +80,7 @@ const ChatListScreen = ({ navigation }) => {
       navigation.navigate('CallScreenAudio', { tokenCall });
     }
   }, [tokenCall, navigation]);
+
   const debouncedSearch = useCallback(
     debounce((text) => {
       if (text.trim() === '') {
@@ -90,6 +97,7 @@ const ChatListScreen = ({ navigation }) => {
     setSearchQuery(text);
     debouncedSearch(text);
   };
+
   const handleAddGroup = async (groupInfo) => {
     const { name, members, avatar } = groupInfo
     console.log(avatar)
@@ -100,32 +108,29 @@ const ChatListScreen = ({ navigation }) => {
     await dispatch(createGroup(formData))
     dispatch(fetchConversations());
   }
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-        {/* Search Box */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%' }}>
+      {/* Search Section - Cải thiện layout */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchContainer}>
           <SearchBar
             value={searchQuery}
             onChangeText={handleSearch}
             onFocus={() => setIsSearching(true)}
-          />
-          <FAB
-            icon="plus"
-            onPress={() => setIsOpenModalAddGroup(true)}
-            style={{
-              marginBottom: 15,
-              height: 30,
-              width: 30,
-              borderRadius: 15,
-              borderWidth: 1,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
+            style={styles.searchBar}
           />
         </View>
+        <TouchableOpacity
+          style={styles.addGroupButton}
+          onPress={() => setIsOpenModalAddGroup(true)}
+        >
+          <View style={styles.addGroupIcon}>
+            <Text style={styles.addGroupText}>+</Text>
+          </View>
+        </TouchableOpacity>
       </View>
+
       <AddGroupUi
         me={me}
         visible={isOpenModalAddGroup}
@@ -135,6 +140,7 @@ const ChatListScreen = ({ navigation }) => {
         dispatch={dispatch}
         useSelector={useSelector}
       />
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.headerText, { color: theme.colors.onBackground }]}>Messages</Text>
@@ -178,7 +184,6 @@ const ChatListScreen = ({ navigation }) => {
               </TouchableOpacity>
             )}
           />
-
         ) : (
           <View style={{ alignItems: 'center', marginTop: 30 }}>
             <Text style={styles.noResultsText}>Không tìm thấy người dùng nào</Text>
@@ -216,7 +221,6 @@ const ChatListScreen = ({ navigation }) => {
                     conversationId: conversation._id,
                     groupAvatar: conversation.groupAvatar,
                     participants: participants
-
                   })
                 }
               >
@@ -254,7 +258,6 @@ const ChatListScreen = ({ navigation }) => {
             );
           }}
         />
-
       )}
     </View>
   );
@@ -263,7 +266,53 @@ const ChatListScreen = ({ navigation }) => {
 export default ChatListScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16
+  },
+
+  // ===== SEARCH SECTION STYLES =====
+  searchSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  searchContainer: {
+    flex: 1,
+  },
+  searchBar: {
+    // Để SearchBar component tự handle style
+  },
+  addGroupButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addGroupIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 24,
+    backgroundColor: '#6600CC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  addGroupText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    lineHeight: 24,
+  },
+
+  // ===== EXISTING STYLES =====
   addFriendText: {
     backgroundColor: "green",
     color: "white",
@@ -295,9 +344,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  headerText: { fontSize: 18, fontWeight: 'bold' },
-  countText: { fontSize: 16, color: '#4A90E2', marginLeft: 5 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  headerText: {
+    fontSize: 18,
+    fontWeight: 'bold'
+  },
+  countText: {
+    fontSize: 16,
+    color: '#4A90E2',
+    marginLeft: 5
+  },
   messageItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,11 +365,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.5,
     borderBottomColor: '#ccc',
   },
-  messageContent: { flex: 1, marginLeft: 10 },
-  name: { fontSize: 16, fontWeight: 'bold' },
-  messageText: { color: '#666' },
-  rightSection: { alignItems: 'flex-end' },
-  time: { fontSize: 14, color: '#999' },
-  badge: { backgroundColor: '#007AFF', color: '#fff', marginTop: 5 },
-  avatarText: { backgroundColor: '#4A90E2' },
+  messageContent: {
+    flex: 1,
+    marginLeft: 10
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+  messageText: {
+    color: '#666'
+  },
+  rightSection: {
+    alignItems: 'flex-end'
+  },
+  time: {
+    fontSize: 14,
+    color: '#999'
+  },
+  badge: {
+    backgroundColor: '#007AFF',
+    color: '#fff',
+    marginTop: 5
+  },
+  avatarText: {
+    backgroundColor: '#4A90E2'
+  },
 });

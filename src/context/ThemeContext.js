@@ -27,6 +27,7 @@ export const ThemeProvider = ({ children }) => {
     colors: {
       ...MD3DarkTheme.colors,
       searchBackground: '#3A3A3A',
+      inputText: '#fff',
     },
   };
 

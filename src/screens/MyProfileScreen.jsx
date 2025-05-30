@@ -26,7 +26,7 @@ const MyProfileScreen = ({ navigation }) => {
   const [newEmail, setNewEmail] = useState(me?.email || '');
   const [avatar, setAvatar] = useState(me?.avatar || null);
   const [modalVisible, setModalVisible] = useState(false);
-  
+
   // Context theme
   const { theme } = useAppTheme();
   const pickImage = () => {
@@ -50,21 +50,21 @@ const MyProfileScreen = ({ navigation }) => {
   };
 
   const updateProfile = async () => {
-  setModalVisible(false);
-  const form = new FormData();
-  form.append('name', newName);
-  form.append('email', newEmail);
+    setModalVisible(false);
+    const form = new FormData();
+    form.append('name', newName);
+    form.append('email', newEmail);
 
-  try {
-    await dispatch(updateUser(form)).unwrap(); 
-    Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
-  } catch (error) {
-    Alert.alert('Lỗi', error.message || 'Cập nhật thất bại. Vui lòng thử lại.');
-  }
-};
+    try {
+      await dispatch(updateUser(form)).unwrap();
+      Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
+    } catch (error) {
+      Alert.alert('Lỗi', error.message || 'Cập nhật thất bại. Vui lòng thử lại.');
+    }
+  };
 
   return (
-    <View style={[styles.container,{ backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <IconButton
         icon="arrow-left"
         size={24}
@@ -88,8 +88,8 @@ const MyProfileScreen = ({ navigation }) => {
       </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={{ fontWeight: 'bold', fontSize: 20, marginTop: 7 , color: theme.colors.onBackground}}>Email:</Text>
-        <Text style={[styles.label,{ color: theme.colors.onBackground }]}>
+        <Text style={{ fontWeight: 'bold', fontSize: 20, marginTop: 7, color: theme.colors.onBackground }}>Email:</Text>
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>
           {me?.email || 'Bạn chưa có thông tin về email'}
         </Text>
       </View>

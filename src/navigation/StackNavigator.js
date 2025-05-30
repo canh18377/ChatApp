@@ -4,16 +4,15 @@ import { screens } from './routes';
 
 const Stack = createNativeStackNavigator();
 
-const StackNavigator = () => {
+const StackNavigator = ({ initialRoute }) => {
   return (
-    <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
-      {screens.map((screen) => {
-        return (
-          <Stack.Screen key={screen.name} name={screen.name} component={screen.component} />
-        )
-      })}
+    <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
+      {screens.map((screen) => (
+        <Stack.Screen key={screen.name} name={screen.name} component={screen.component} />
+      ))}
     </Stack.Navigator>
   );
 };
+
 
 export default StackNavigator;

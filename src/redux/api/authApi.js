@@ -17,4 +17,13 @@ export const fetchRegister = createAsyncThunk('register/fetchRegister', async (d
         throw new Error(error.message || 'Lỗi không xác định');
     }
 });
+// Thêm API logout
+export const fetchLogout = createAsyncThunk('auth/fetchLogout', async () => {
+    try {
+        const response = await axios.post(`/auth/logout`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.message || 'Lỗi đăng xuất');
+    }
+});
 

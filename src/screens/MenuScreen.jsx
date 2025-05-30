@@ -6,7 +6,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSelector } from 'react-redux';
 import { useAppTheme } from '../context/ThemeContext';
+import { useDispatch } from 'react-redux';
+import { fetchLogout } from '../redux/api/authApi';
 const MenuScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const { isDarkMode, toggleTheme, theme } = useAppTheme();
   const me = useSelector((state) => state.userReducer.me);
   const handleLogout = async () => {
@@ -16,13 +19,28 @@ const MenuScreen = ({ navigation }) => {
         text: 'Đăng xuất',
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('userToken');
-          InteractionManager.runAfterInteractions(() => {
+          try {
+            // Gọi API logout trước
+            await dispatch(fetchLogout()).unwrap();
+
+            // Sau đó xóa token local
+            await AsyncStorage.removeItem('userToken');
+
+            InteractionManager.runAfterInteractions(() => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'LoginScreen' }],
+              });
+            });
+          } catch (error) {
+            console.log('Logout error:', error);
+            // Vẫn logout local nếu API fail
+            await AsyncStorage.removeItem('userToken');
             navigation.reset({
               index: 0,
               routes: [{ name: 'LoginScreen' }],
             });
-          });
+          }
         },
       },
     ]);
